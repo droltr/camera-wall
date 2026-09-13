@@ -1,0 +1,8 @@
+# Copy this file to camera.properties and replace the example values.
+# camera.properties is ignored by Git and may contain private RTSP credentials.
+camera.1.name=FRONT DOOR
+camera.1.url=rtsp://go2rtc.example:8554/frontdoor
+camera.2.name=OFFICE
+camera.2.url=rtsp://go2rtc.example:8554/office
+camera.3.name=ENTRANCE
+camera.3.url=rtsp://go2rtc.example:8554/entrance

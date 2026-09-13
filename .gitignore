@@ -1,0 +1,24 @@
+# Build outputs
+app/build/
+build/
+*.apk
+*.ab
+
+# Local dev environment (not part of the app project)
+.gradle/
+.toolchain/
+local.properties
+camera.properties
+*.hprof
+
+# Tablet-recovery working files (not part of this software project)
+backups/
+firmware/
+tools/
+README.txt
+KAMERA_DUVARI.md
+kaldirilan_uygulamalar.md
+
+# IDE
+.idea/
+*.iml

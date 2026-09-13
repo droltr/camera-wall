@@ -1,0 +1,61 @@
+import groovy.json.JsonOutput
+
+plugins { id 'com.android.application' }
+
+def cameraConfigFile = rootProject.file('camera.properties')
+def cameraExampleFile = rootProject.file('camera.properties.example')
+def cameraConfig = new Properties()
+def selectedCameraConfig = cameraConfigFile.exists() ? cameraConfigFile : cameraExampleFile
+if (selectedCameraConfig.exists()) {
+    selectedCameraConfig.withInputStream { cameraConfig.load(it) }
+}
+
+def configuredCameras = []
+for (int index = 1; cameraConfig.getProperty("camera.${index}.url") != null; index++) {
+    configuredCameras << [
+        name: cameraConfig.getProperty("camera.${index}.name", "CAMERA ${index}"),
+        url : cameraConfig.getProperty("camera.${index}.url")
+    ]
+}
+def camerasJson = JsonOutput.toJson(configuredCameras)
+def quotedCamerasJson = JsonOutput.toJson(camerasJson)
+def releaseTag = System.getenv('GITHUB_REF_NAME')
+def resolvedVersionName = releaseTag?.matches('v[0-9]+\\.[0-9]+\\.[0-9]+') ? releaseTag.substring(1) : '1.0.0'
+def resolvedVersionCode = System.getenv('GITHUB_RUN_NUMBER')?.isInteger() ? System.getenv('GITHUB_RUN_NUMBER').toInteger() : 1
+
+android {
+    namespace 'local.camerawall'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'local.camerawall'
+        minSdk 21
+        targetSdk 28
+        versionCode resolvedVersionCode
+        versionName resolvedVersionName
+        ndk { abiFilters 'x86' }
+        buildConfigField 'String', 'CAMERAS_JSON', quotedCamerasJson
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs {
+        if (System.getenv('CAMERA_WALL_KEYSTORE_FILE')) {
+            release {
+                storeFile file(System.getenv('CAMERA_WALL_KEYSTORE_FILE'))
+                storePassword System.getenv('CAMERA_WALL_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('CAMERA_WALL_KEY_ALIAS')
+                keyPassword System.getenv('CAMERA_WALL_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (System.getenv('CAMERA_WALL_KEYSTORE_FILE')) signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+    packagingOptions { jniLibs.useLegacyPackaging = true }
+}
+
+dependencies {
+    implementation 'org.videolan.android:libvlc-all:3.5.1'
+}
