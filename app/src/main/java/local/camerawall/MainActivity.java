@@ -55,6 +55,10 @@ public final class MainActivity extends Activity {
             for (int column = 0; column < 2; column++) {
                 int index = row * 2 + column;
                 tiles[index] = new CameraPlayerView(this, libVLC, handler);
+                final int slot = index;
+                tiles[index].setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View view) { openCamera(slot); }
+                });
                 line.addView(tiles[index], horizontalWeight());
             }
             wall.addView(line, verticalWeight());
@@ -85,6 +89,13 @@ public final class MainActivity extends Activity {
     private void schedulePageChange() {
         handler.removeCallbacks(nextPage);
         if (pageCount() > 1) handler.postDelayed(nextPage, PAGE_INTERVAL_MS);
+    }
+    private void openCamera(int slot) {
+        int cameraIndex = currentPage * CAMERAS_PER_PAGE + slot;
+        if (cameraIndex >= cameras.size()) return;
+        Intent intent = new Intent(this, SingleCameraActivity.class);
+        intent.putExtra(SingleCameraActivity.EXTRA_CAMERA_INDEX, cameraIndex);
+        startActivity(intent);
     }
     private LinearLayout.LayoutParams horizontalWeight() { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, -1, 1f); p.setMargins(1,1,1,1); return p; }
     private LinearLayout.LayoutParams verticalWeight() { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, 0, 1f); p.setMargins(1,1,1,1); return p; }
