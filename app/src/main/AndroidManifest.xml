@@ -12,6 +12,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".CameraListActivity" android:screenOrientation="landscape" android:exported="false" />
+        <activity android:name=".SettingsActivity" android:screenOrientation="landscape" android:exported="false" />
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
