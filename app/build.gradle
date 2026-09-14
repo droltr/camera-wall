@@ -13,8 +13,10 @@ if (selectedCameraConfig.exists()) {
 def configuredCameras = []
 for (int index = 1; cameraConfig.getProperty("camera.${index}.url") != null; index++) {
     configuredCameras << [
-        name: cameraConfig.getProperty("camera.${index}.name", "CAMERA ${index}"),
-        url : cameraConfig.getProperty("camera.${index}.url")
+        name    : cameraConfig.getProperty("camera.${index}.name", "CAMERA ${index}"),
+        url     : cameraConfig.getProperty("camera.${index}.url"),
+        username: cameraConfig.getProperty("camera.${index}.username", ""),
+        password: cameraConfig.getProperty("camera.${index}.password", "")
     ]
 }
 def camerasJson = JsonOutput.toJson(configuredCameras)

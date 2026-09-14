@@ -2,6 +2,7 @@ package local.camerawall;
 
 import android.app.Activity;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -72,7 +73,12 @@ public final class MainActivity extends Activity {
             JSONArray values = new JSONArray(BuildConfig.CAMERAS_JSON);
             for (int index = 0; index < values.length(); index++) {
                 JSONObject value = values.getJSONObject(index);
-                cameras.add(new CameraSpec(value.getString("name"), value.getString("url")));
+                cameras.add(new CameraSpec(
+                    value.getString("name"),
+                    value.getString("url"),
+                    value.optString("username"),
+                    value.optString("password")
+                ));
             }
         } catch (JSONException error) {
             throw new IllegalStateException("Invalid generated camera configuration", error);
@@ -98,8 +104,23 @@ public final class MainActivity extends Activity {
     @Override protected void onDestroy() { if (libVLC != null) { libVLC.release(); libVLC = null; } super.onDestroy(); }
 
     private static final class CameraSpec {
-        final String name, url;
-        CameraSpec(String name, String url) { this.name = name; this.url = url; }
+        final String name, url, username, password;
+        CameraSpec(String name, String url, String username, String password) {
+            this.name = name;
+            this.url = url;
+            this.username = username;
+            this.password = password;
+        }
+
+        Uri playbackUri() {
+            Uri endpoint = Uri.parse(url);
+            if (username.length() == 0) return endpoint;
+
+            String authority = endpoint.getEncodedAuthority();
+            if (authority == null || authority.indexOf('@') >= 0) return endpoint;
+            String userInfo = Uri.encode(username) + ":" + Uri.encode(password);
+            return endpoint.buildUpon().encodedAuthority(userInfo + "@" + authority).build();
+        }
     }
 
     private final class CameraTile extends FrameLayout implements MediaPlayer.EventListener, SurfaceHolder.Callback {
@@ -123,7 +144,7 @@ public final class MainActivity extends Activity {
             stopPlayerOnly(); status.setVisibility(VISIBLE); status.setText(camera.name + "\nConnecting…");
             player = new MediaPlayer(libVLC); player.setEventListener(this); player.getVLCVout().setVideoView(surface); player.getVLCVout().attachViews();
             if (getWidth() > 0 && getHeight() > 0) player.getVLCVout().setWindowSize(getWidth(), getHeight());
-            Media media = new Media(libVLC, android.net.Uri.parse(camera.url)); media.addOption(":rtsp-tcp"); media.addOption(":no-audio"); media.addOption(":network-caching=800"); player.setMedia(media); media.release();
+            Media media = new Media(libVLC, camera.playbackUri()); media.addOption(":rtsp-tcp"); media.addOption(":no-audio"); media.addOption(":network-caching=800"); player.setMedia(media); media.release();
             player.setAspectRatio(null); player.setScale(0); player.play();
         }
         @Override public void surfaceCreated(SurfaceHolder holder) { }

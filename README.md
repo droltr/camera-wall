@@ -36,11 +36,16 @@ cp camera.properties.example camera.properties
 ```properties
 camera.1.name=FRONT DOOR
 camera.1.url=rtsp://go2rtc.example:8554/frontdoor
+camera.1.username=camera_wall
+camera.1.password=replace-with-a-strong-password
 camera.2.name=OFFICE
 camera.2.url=rtsp://go2rtc.example:8554/office
 ```
 
 Entries must be numbered consecutively from 1. Every four cameras form a page.
+The `username` and `password` fields are optional, so existing unauthenticated
+go2rtc streams continue to work. When RTSP authentication is enabled later,
+credentials can be added without changing application source code.
 `camera.properties` is ignored by Git because RTSP URLs may contain credentials.
 The compiled APK still contains the configured URLs, so distribute private
 builds accordingly.
@@ -93,3 +98,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Changes are recorded in
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+## Security
+
+Review the current accepted risks and planned hardening work in
+[docs/SECURITY_RISK_REGISTER.md](docs/SECURITY_RISK_REGISTER.md). Do not expose
+Frigate or go2rtc service ports to the internet.

@@ -7,6 +7,8 @@ Notable changes are documented here. This project follows
 
 ### Added
 
+- Optional per-camera RTSP username and password fields for future server hardening
+- Security risk register for the current trusted-LAN deployment
 - Build-time camera configuration through an ignored local properties file
 - Android CI and signed GitHub Release workflows
 - Dependabot configuration, contribution guide, and issue templates
