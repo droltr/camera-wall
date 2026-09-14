@@ -42,6 +42,20 @@ final class CameraRepository {
         return save(cameras);
     }
 
+    boolean update(int index, CameraSpec camera) {
+        List<CameraSpec> cameras = getCameras();
+        if (index < 0 || index >= cameras.size()) return false;
+        cameras.set(index, camera);
+        return save(cameras);
+    }
+
+    boolean delete(int index) {
+        List<CameraSpec> cameras = getCameras();
+        if (index < 0 || index >= cameras.size()) return false;
+        cameras.remove(index);
+        return save(cameras);
+    }
+
     private boolean save(List<CameraSpec> cameras) {
         JSONArray values = new JSONArray();
         try {
