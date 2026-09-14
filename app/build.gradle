@@ -35,7 +35,8 @@ android {
         targetSdk 28
         versionCode resolvedVersionCode
         versionName resolvedVersionName
-        ndk { abiFilters 'x86' }
+        // Preserve the ASUS K012 x86 path while supporting ARM devices.
+        ndk { abiFilters 'x86', 'armeabi-v7a', 'arm64-v8a' }
         buildConfigField 'String', 'CAMERAS_JSON', quotedCamerasJson
     }
     buildFeatures { buildConfig true }
