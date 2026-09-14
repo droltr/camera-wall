@@ -5,8 +5,14 @@ Notable changes are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.2.0-alpha.1] - 2026-09-14
+
 ### Added
 
+- Reusable libVLC camera player shared by wall and fullscreen views
+- Private ordered camera repository seeded from the build configuration
+- Compact Home, Cameras, and Settings bottom navigation
+- Tap-to-fullscreen single-camera view with visible and system Back support
 - Optional per-camera RTSP username and password fields for future server hardening
 - Security risk register for the current trusted-LAN deployment
 - Staged roadmap for navigation, camera management, discovery, and device-safe delivery
@@ -26,5 +32,6 @@ Notable changes are documented here. This project follows
 
 - Initial 2x2 RTSP camera wall application
 
-[Unreleased]: https://github.com/droltr/camera-wall/compare/v0.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/droltr/camera-wall/compare/v0.2.0-alpha.1...HEAD
+[0.2.0-alpha.1]: https://github.com/droltr/camera-wall/compare/v0.1.0-alpha.1...v0.2.0-alpha.1
 [0.1.0-alpha.1]: https://github.com/droltr/camera-wall/releases/tag/v0.1.0-alpha.1
