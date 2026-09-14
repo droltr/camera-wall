@@ -36,11 +36,16 @@ cp camera.properties.example camera.properties
 ```properties
 camera.1.name=FRONT DOOR
 camera.1.url=rtsp://go2rtc.example:8554/frontdoor
+camera.1.username=camera_wall
+camera.1.password=replace-with-a-strong-password
 camera.2.name=OFFICE
 camera.2.url=rtsp://go2rtc.example:8554/office
 ```
 
 Entries must be numbered consecutively from 1. Every four cameras form a page.
+The `username` and `password` fields are optional, so existing unauthenticated
+go2rtc streams continue to work. When RTSP authentication is enabled later,
+credentials can be added without changing application source code.
 `camera.properties` is ignored by Git because RTSP URLs may contain credentials.
 The compiled APK still contains the configured URLs, so distribute private
 builds accordingly.
@@ -73,6 +78,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Tags matching `v*` trigger the release workflow. It builds a signed x86 APK,
 generates a SHA-256 checksum, and attaches both files to a GitHub Release.
+The project is currently in alpha; use tags such as `v0.1.0-alpha.1`. Alpha
+tags are automatically marked as pre-releases on GitHub. Beta and stable
+versions are intentionally deferred until the application matures.
 Configure these repository secrets first:
 
 - `CAMERA_CONFIG_BASE64`
@@ -93,3 +101,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Changes are recorded in
 ## License
 
 Licensed under the [MIT License](LICENSE).
+
+## Security
+
+Review the current accepted risks and planned hardening work in
+[docs/SECURITY_RISK_REGISTER.md](docs/SECURITY_RISK_REGISTER.md). Do not expose
+Frigate or go2rtc service ports to the internet.
+
+The staged interface, camera-management, discovery, compatibility, testing,
+branching, and commit plan is maintained in [docs/ROADMAP.md](docs/ROADMAP.md).
