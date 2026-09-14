@@ -1,6 +1,7 @@
 package local.camerawall;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
@@ -43,6 +44,10 @@ public final class MainActivity extends Activity {
         cameraRepository = new CameraRepository(this);
         cameras = cameraRepository.getCameras();
 
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setBackgroundColor(Color.BLACK);
+
         LinearLayout wall = new LinearLayout(this);
         wall.setOrientation(LinearLayout.VERTICAL); wall.setBackgroundColor(Color.BLACK);
         for (int row = 0; row < 2; row++) {
@@ -54,7 +59,19 @@ public final class MainActivity extends Activity {
             }
             wall.addView(line, verticalWeight());
         }
-        setContentView(wall);
+        root.addView(wall, new LinearLayout.LayoutParams(-1, 0, 1f));
+        BottomNavigationBar navigation = new BottomNavigationBar(this, BottomNavigationBar.Destination.HOME);
+        navigation.setListener(new BottomNavigationBar.Listener() {
+            @Override public void onDestinationSelected(BottomNavigationBar.Destination destination) {
+                if (destination == BottomNavigationBar.Destination.CAMERAS) {
+                    startActivity(new Intent(MainActivity.this, CameraListActivity.class));
+                } else if (destination == BottomNavigationBar.Destination.SETTINGS) {
+                    startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+                }
+            }
+        });
+        root.addView(navigation, new LinearLayout.LayoutParams(-1, dp(52)));
+        setContentView(root);
     }
 
     private int pageCount() { return Math.max(1, (cameras.size() + CAMERAS_PER_PAGE - 1) / CAMERAS_PER_PAGE); }
@@ -71,6 +88,7 @@ public final class MainActivity extends Activity {
     }
     private LinearLayout.LayoutParams horizontalWeight() { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, -1, 1f); p.setMargins(1,1,1,1); return p; }
     private LinearLayout.LayoutParams verticalWeight() { LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, 0, 1f); p.setMargins(1,1,1,1); return p; }
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
     private void hideSystemUi() { getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_LAYOUT_STABLE); }
     @Override public void onWindowFocusChanged(boolean focus) { super.onWindowFocusChanged(focus); if (focus) hideSystemUi(); }
     @Override protected void onResume() {
