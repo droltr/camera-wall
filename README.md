@@ -33,13 +33,13 @@ review the ordered parent tracker in
 | Proven playback foundation | Complete | [#18](https://github.com/droltr/camera-wall/issues/18), [#16](https://github.com/droltr/camera-wall/issues/16) |
 | Home and bottom navigation | Complete | [#10](https://github.com/droltr/camera-wall/issues/10) |
 | Tap-to-fullscreen camera | Complete | [#13](https://github.com/droltr/camera-wall/issues/13) |
-| Camera management | In progress | [#19](https://github.com/droltr/camera-wall/issues/19), [#11](https://github.com/droltr/camera-wall/issues/11), [#20](https://github.com/droltr/camera-wall/issues/20), [#17](https://github.com/droltr/camera-wall/issues/17), [#21](https://github.com/droltr/camera-wall/issues/21) |
-| Application and go2rtc settings | Planned | [#22](https://github.com/droltr/camera-wall/issues/22), [#23](https://github.com/droltr/camera-wall/issues/23) |
-| go2rtc stream import | Planned | [#24](https://github.com/droltr/camera-wall/issues/24) |
-| ONVIF and bounded RTSP discovery | Planned | [#25](https://github.com/droltr/camera-wall/issues/25), [#26](https://github.com/droltr/camera-wall/issues/26) |
-| Launcher icon | Planned | [#27](https://github.com/droltr/camera-wall/issues/27) |
+| Camera management | Complete | [#19](https://github.com/droltr/camera-wall/issues/19), [#11](https://github.com/droltr/camera-wall/issues/11), [#20](https://github.com/droltr/camera-wall/issues/20), [#17](https://github.com/droltr/camera-wall/issues/17), [#21](https://github.com/droltr/camera-wall/issues/21) |
+| Application and go2rtc settings | Complete | [#22](https://github.com/droltr/camera-wall/issues/22), [#23](https://github.com/droltr/camera-wall/issues/23) |
+| go2rtc stream import | Complete | [#24](https://github.com/droltr/camera-wall/issues/24) |
+| ONVIF and bounded RTSP discovery | Complete | [#25](https://github.com/droltr/camera-wall/issues/25), [#26](https://github.com/droltr/camera-wall/issues/26) |
+| Launcher icon | Complete | [#27](https://github.com/droltr/camera-wall/issues/27) |
 | Network hardening | Risk accepted temporarily | [#28](https://github.com/droltr/camera-wall/issues/28) |
-| Extended ASUS K012 stability test | Planned | [#29](https://github.com/droltr/camera-wall/issues/29) |
+| Extended ASUS K012 stability test | Alpha checkpoint recorded | [#29](https://github.com/droltr/camera-wall/issues/29) |
 
 Alpha milestones: [v0.2 foundation](https://github.com/droltr/camera-wall/milestone/1),
 [v0.3 camera management](https://github.com/droltr/camera-wall/milestone/2),

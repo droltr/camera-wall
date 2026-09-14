@@ -5,6 +5,12 @@ Notable changes are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Persisted application and go2rtc server settings with masked credentials
+- go2rtc stream import, ONVIF discovery, bounded local RTSP scanning, and launcher icon
+- ASUS K012 alpha stability smoke-test record
+
 ## [0.2.0-alpha.1] - 2026-09-14
 
 ### Added
