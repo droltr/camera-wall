@@ -36,6 +36,12 @@ final class CameraRepository {
         return save(cameras);
     }
 
+    boolean add(CameraSpec camera) {
+        List<CameraSpec> cameras = getCameras();
+        cameras.add(camera);
+        return save(cameras);
+    }
+
     private boolean save(List<CameraSpec> cameras) {
         JSONArray values = new JSONArray();
         try {
