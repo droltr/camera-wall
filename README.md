@@ -18,6 +18,36 @@ camera monitor. It was built for an ASUS MeMO Pad 7 K012 running Android 5.0.
 - Automatic reconnect attempts every 15 seconds
 - Start on boot and keep the screen awake while visible
 
+## Development status
+
+Camera Wall is in active alpha development. The ASUS K012 and the existing
+camera wall must remain operational at every accepted checkpoint.
+
+| Workstream | Status | Tracking |
+|---|---|---|
+| Proven playback foundation | In progress | [#18](https://github.com/droltr/camera-wall/issues/18), [#16](https://github.com/droltr/camera-wall/issues/16) |
+| Home and bottom navigation | Planned | [#10](https://github.com/droltr/camera-wall/issues/10) |
+| Tap-to-fullscreen camera | Planned | [#13](https://github.com/droltr/camera-wall/issues/13) |
+| Camera management | Planned | [#19](https://github.com/droltr/camera-wall/issues/19), [#11](https://github.com/droltr/camera-wall/issues/11), [#20](https://github.com/droltr/camera-wall/issues/20), [#17](https://github.com/droltr/camera-wall/issues/17), [#21](https://github.com/droltr/camera-wall/issues/21) |
+| Application and go2rtc settings | Planned | [#22](https://github.com/droltr/camera-wall/issues/22), [#23](https://github.com/droltr/camera-wall/issues/23) |
+| go2rtc stream import | Planned | [#24](https://github.com/droltr/camera-wall/issues/24) |
+| ONVIF and bounded RTSP discovery | Planned | [#25](https://github.com/droltr/camera-wall/issues/25), [#26](https://github.com/droltr/camera-wall/issues/26) |
+| Launcher icon | Planned | [#27](https://github.com/droltr/camera-wall/issues/27) |
+| Network hardening | Risk accepted temporarily | [#28](https://github.com/droltr/camera-wall/issues/28) |
+| Extended ASUS K012 stability test | Planned | [#29](https://github.com/droltr/camera-wall/issues/29) |
+
+Alpha milestones: [v0.2 foundation](https://github.com/droltr/camera-wall/milestone/1),
+[v0.3 camera management](https://github.com/droltr/camera-wall/milestone/2),
+[v0.4 settings](https://github.com/droltr/camera-wall/milestone/3),
+[v0.5 go2rtc import](https://github.com/droltr/camera-wall/milestone/4),
+[v0.6 discovery](https://github.com/droltr/camera-wall/milestone/5), and
+[v0.7 hardening](https://github.com/droltr/camera-wall/milestone/6).
+
+See [docs/DEVELOPMENT_PROCESS.md](docs/DEVELOPMENT_PROCESS.md) for how an item
+moves from plan to code, real-device validation, merge, changelog, and alpha
+release. Completed history remains visible through closed Issues, merged pull
+requests, the changelog, and GitHub Releases.
+
 ## Compatibility
 
 The application requires Android 5.0 (API 21) or newer. The current build is
