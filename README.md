@@ -55,9 +55,9 @@ requests, the changelog, and GitHub Releases.
 
 ## Compatibility
 
-The application requires Android 5.0 (API 21) or newer. The current build is
-deliberately restricted to the **x86 ABI** for the target tablet. It will not
-install on ARM-only devices.
+The application requires Android 5.0 (API 21) or newer. The APK packages
+**x86**, **armeabi-v7a**, and **arm64-v8a** so the original ASUS K012 and ARM
+phones/tablets can use the same alpha build.
 
 ## Camera configuration
 
@@ -111,7 +111,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Releases
 
-Tags matching `v*` trigger the release workflow. It builds a signed x86 APK,
+Tags matching `v*` trigger the release workflow. It builds a signed universal
+APK containing x86 and ARM ABIs,
 generates a SHA-256 checksum, and attaches both files to a GitHub Release.
 The project is currently in alpha; use tags such as `v0.1.0-alpha.1`. Alpha
 tags are automatically marked as pre-releases on GitHub. Beta and stable
