@@ -3,6 +3,7 @@ package local.camerawall;
 import android.app.AlertDialog;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Handler;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
@@ -11,10 +12,19 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaPlayer;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public final class CameraListActivity extends BaseSectionActivity {
+    private final Handler testHandler = new Handler();
+    private MediaPlayer testPlayer;
+    private LibVLC testLibVLC;
     @Override String sectionTitle() { return "Kameralar"; }
     @Override BottomNavigationBar.Destination destination() { return BottomNavigationBar.Destination.CAMERAS; }
 
@@ -137,6 +147,10 @@ public final class CameraListActivity extends BaseSectionActivity {
                 if (new CameraRepository(CameraListActivity.this).move(position, 1)) recreate();
             }
         });
+        Button test = new Button(this); test.setText("Test");
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { testConnection(camera); }
+        });
         Button edit = new Button(this); edit.setText("Düzenle");
         edit.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showCameraDialog(position, camera); }
@@ -147,6 +161,7 @@ public final class CameraListActivity extends BaseSectionActivity {
         });
         actions.addView(up, new LinearLayout.LayoutParams(0, -2, 1f));
         actions.addView(down, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(test, new LinearLayout.LayoutParams(0, -2, 1f));
         actions.addView(edit, new LinearLayout.LayoutParams(0, -2, 1f));
         actions.addView(remove, new LinearLayout.LayoutParams(0, -2, 1f));
         row.addView(actions);
@@ -166,6 +181,40 @@ public final class CameraListActivity extends BaseSectionActivity {
                 }
             }).show();
     }
+
+    private void testConnection(final CameraSpec camera) {
+        stopTestPlayer();
+        ArrayList<String> options = new ArrayList<>();
+        options.add("--no-audio"); options.add("--rtsp-tcp"); options.add("--network-caching=800");
+        testLibVLC = new LibVLC(this, options);
+        testPlayer = new MediaPlayer(testLibVLC);
+        testPlayer.setEventListener(new MediaPlayer.EventListener() {
+            @Override public void onEvent(MediaPlayer.Event event) {
+                if (event.type == MediaPlayer.Event.Playing) {
+                    testHandler.post(new Runnable() { @Override public void run() {
+                        Toast.makeText(CameraListActivity.this, camera.name + ": bağlantı başarılı", Toast.LENGTH_SHORT).show(); stopTestPlayer();
+                    }});
+                } else if (event.type == MediaPlayer.Event.EncounteredError || event.type == MediaPlayer.Event.EndReached) {
+                    testHandler.post(new Runnable() { @Override public void run() {
+                        Toast.makeText(CameraListActivity.this, camera.name + ": bağlantı başarısız", Toast.LENGTH_SHORT).show(); stopTestPlayer();
+                    }});
+                }
+            }
+        });
+        Media media = new Media(testLibVLC, camera.playbackUri());
+        media.addOption(":rtsp-tcp"); media.addOption(":no-audio"); media.addOption(":network-caching=800");
+        testPlayer.setMedia(media); media.release(); testPlayer.play();
+        testHandler.postDelayed(new Runnable() { @Override public void run() {
+            if (testPlayer != null) { Toast.makeText(CameraListActivity.this, camera.name + ": zaman aşımı", Toast.LENGTH_SHORT).show(); stopTestPlayer(); }
+        }}, 8000);
+    }
+
+    private void stopTestPlayer() {
+        if (testPlayer != null) { testPlayer.setEventListener(null); testPlayer.stop(); testPlayer.release(); testPlayer = null; }
+        if (testLibVLC != null) { testLibVLC.release(); testLibVLC = null; }
+    }
+
+    @Override protected void onDestroy() { stopTestPlayer(); super.onDestroy(); }
 
     private LinearLayout.LayoutParams rowLayoutParams() {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
