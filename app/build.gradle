@@ -22,8 +22,8 @@ for (int index = 1; cameraConfig.getProperty("camera.${index}.url") != null; ind
 def camerasJson = JsonOutput.toJson(configuredCameras)
 def quotedCamerasJson = JsonOutput.toJson(camerasJson)
 def releaseTag = System.getenv('GITHUB_REF_NAME')
-def resolvedVersionName = releaseTag?.matches('v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?') ? releaseTag.substring(1) : '0.2.0-alpha.1'
-def resolvedVersionCode = System.getenv('GITHUB_RUN_NUMBER')?.isInteger() ? System.getenv('GITHUB_RUN_NUMBER').toInteger() : 2
+def resolvedVersionName = releaseTag?.matches('v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?') ? releaseTag.substring(1) : '0.3.0-alpha.1'
+def resolvedVersionCode = System.getenv('GITHUB_RUN_NUMBER')?.isInteger() ? System.getenv('GITHUB_RUN_NUMBER').toInteger() : 3
 
 android {
     namespace 'local.camerawall'
