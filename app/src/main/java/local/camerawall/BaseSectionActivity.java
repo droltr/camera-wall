@@ -22,12 +22,7 @@ abstract class BaseSectionActivity extends Activity implements BottomNavigationB
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.BLACK);
 
-        TextView placeholder = new TextView(this);
-        placeholder.setText(sectionTitle() + "\n\nBu ekran sonraki alpha aşamasında tamamlanacak.");
-        placeholder.setTextColor(Color.WHITE);
-        placeholder.setTextSize(22);
-        placeholder.setGravity(Gravity.CENTER);
-        root.addView(placeholder, new LinearLayout.LayoutParams(-1, 0, 1f));
+        root.addView(createContentView(), new LinearLayout.LayoutParams(-1, 0, 1f));
 
         BottomNavigationBar navigation = new BottomNavigationBar(this, destination());
         navigation.setListener(this);
@@ -37,6 +32,15 @@ abstract class BaseSectionActivity extends Activity implements BottomNavigationB
 
     abstract String sectionTitle();
     abstract BottomNavigationBar.Destination destination();
+
+    View createContentView() {
+        TextView placeholder = new TextView(this);
+        placeholder.setText(sectionTitle() + "\n\nBu ekran sonraki alpha aşamasında tamamlanacak.");
+        placeholder.setTextColor(Color.WHITE);
+        placeholder.setTextSize(22);
+        placeholder.setGravity(Gravity.CENTER);
+        return placeholder;
+    }
 
     @Override public void onDestinationSelected(BottomNavigationBar.Destination selected) {
         if (selected == destination()) return;
@@ -58,7 +62,7 @@ abstract class BaseSectionActivity extends Activity implements BottomNavigationB
         if (focus) hideSystemUi();
     }
 
-    private int dp(int value) {
+    final int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
