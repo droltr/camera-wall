@@ -41,7 +41,7 @@ public final class CameraListActivity extends BaseSectionActivity {
             content.addView(empty, new LinearLayout.LayoutParams(-1, 0, 1f));
         } else {
             for (int index = 0; index < cameras.size(); index++) {
-                content.addView(cameraRow(index + 1, cameras.get(index)), rowLayoutParams());
+                content.addView(cameraRow(index, cameras.get(index)), rowLayoutParams());
             }
         }
 
@@ -51,7 +51,9 @@ public final class CameraListActivity extends BaseSectionActivity {
         return scroll;
     }
 
-    private void showAddDialog() {
+    private void showAddDialog() { showCameraDialog(-1, null); }
+
+    private void showCameraDialog(final int editIndex, CameraSpec existing) {
         LinearLayout form = new LinearLayout(this);
         form.setOrientation(LinearLayout.VERTICAL);
         form.setPadding(dp(24), dp(8), dp(24), 0);
@@ -59,11 +61,15 @@ public final class CameraListActivity extends BaseSectionActivity {
         final EditText url = field("RTSP adresi (rtsp://…)");
         final EditText username = field("Kullanıcı adı (isteğe bağlı)");
         final EditText password = field("Parola (isteğe bağlı)");
+        if (existing != null) {
+            name.setText(existing.name); url.setText(existing.url);
+            username.setText(existing.username); password.setText(existing.password);
+        }
         password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
         form.addView(name); form.addView(url); form.addView(username); form.addView(password);
 
         final AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle("Kamera ekle")
+            .setTitle(editIndex < 0 ? "Kamera ekle" : "Kamerayı düzenle")
             .setView(form)
             .setNegativeButton("İptal", null)
             .setPositiveButton("Kaydet", null)
@@ -80,7 +86,9 @@ public final class CameraListActivity extends BaseSectionActivity {
                         }
                         CameraSpec camera = new CameraSpec(cameraName, cameraUrl,
                             username.getText().toString().trim(), password.getText().toString());
-                        if (!new CameraRepository(CameraListActivity.this).add(camera)) {
+                        CameraRepository repository = new CameraRepository(CameraListActivity.this);
+                        boolean saved = editIndex < 0 ? repository.add(camera) : repository.update(editIndex, camera);
+                        if (!saved) {
                             url.setError("Kamera kaydedilemedi");
                             return;
                         }
@@ -102,7 +110,7 @@ public final class CameraListActivity extends BaseSectionActivity {
         return field;
     }
 
-    private View cameraRow(int position, CameraSpec camera) {
+    private View cameraRow(final int position, final CameraSpec camera) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(16), dp(10), dp(16), dp(10));
@@ -115,8 +123,34 @@ public final class CameraListActivity extends BaseSectionActivity {
         TextView state = text("Kayıtlı", 13, Color.rgb(105, 205, 135));
         state.setPadding(0, dp(4), 0, 0);
         row.addView(state);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        Button edit = new Button(this); edit.setText("Düzenle");
+        edit.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showCameraDialog(position, camera); }
+        });
+        Button remove = new Button(this); remove.setText("Sil");
+        remove.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { confirmDelete(position, camera.name); }
+        });
+        actions.addView(edit, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(remove, new LinearLayout.LayoutParams(0, -2, 1f));
+        row.addView(actions);
         row.setContentDescription(camera.name + ", kayıtlı kamera");
         return row;
+    }
+
+    private void confirmDelete(final int position, String name) {
+        new AlertDialog.Builder(this)
+            .setTitle("Kamera silinsin mi?")
+            .setMessage(name)
+            .setNegativeButton("İptal", null)
+            .setPositiveButton("Sil", new android.content.DialogInterface.OnClickListener() {
+                @Override public void onClick(android.content.DialogInterface dialog, int which) {
+                    new CameraRepository(CameraListActivity.this).delete(position);
+                    recreate();
+                }
+            }).show();
     }
 
     private LinearLayout.LayoutParams rowLayoutParams() {
