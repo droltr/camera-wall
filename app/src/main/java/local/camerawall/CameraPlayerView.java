@@ -27,6 +27,18 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
     private String cameraName;
     private Uri cameraUri;
     private MediaPlayer player;
+    private boolean playing;
+    private long connectStartedAt;
+    private final Runnable healthCheck = new Runnable() {
+        @Override public void run() {
+            if (cameraUri == null) return;
+            if (!playing && System.currentTimeMillis() - connectStartedAt > 10000) {
+                failed();
+                return;
+            }
+            handler.postDelayed(this, 5000);
+        }
+    };
     private final Runnable reconnect = new Runnable() {
         @Override public void run() { connect(); }
     };
@@ -54,6 +66,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         stop();
         cameraName = name;
         cameraUri = uri;
+        playing = false;
         if (cameraUri == null) {
             status.setText("");
             status.setVisibility(VISIBLE);
@@ -61,10 +74,14 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         }
         showConnecting();
         connectSoon(100);
+        handler.removeCallbacks(healthCheck);
+        handler.postDelayed(healthCheck, 5000);
     }
 
     void stop() {
         handler.removeCallbacks(reconnect);
+        handler.removeCallbacks(healthCheck);
+        playing = false;
         stopPlayerOnly();
     }
 
@@ -76,6 +93,8 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
     private void connect() {
         if (cameraUri == null || activity.isFinishing()) return;
         stopPlayerOnly();
+        playing = false;
+        connectStartedAt = System.currentTimeMillis();
         showConnecting();
         player = new MediaPlayer(libVLC);
         player.setEventListener(this);
@@ -94,6 +113,8 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         player.setAspectRatio(null);
         player.setScale(0);
         player.play();
+        handler.removeCallbacks(healthCheck);
+        handler.postDelayed(healthCheck, 5000);
     }
 
     private void showConnecting() {
@@ -130,6 +151,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         handler.post(new Runnable() {
             @Override public void run() {
                 if (event.type == MediaPlayer.Event.Playing && player != null) {
+                    playing = true;
                     player.setAspectRatio(null);
                     player.setScale(0);
                     status.setVisibility(View.GONE);
