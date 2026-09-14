@@ -17,6 +17,11 @@ import android.widget.Toast;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +49,9 @@ public final class CameraListActivity extends BaseSectionActivity {
             @Override public void onClick(View view) { showAddDialog(); }
         });
         content.addView(add, rowLayoutParams());
+        Button importButton = new Button(this); importButton.setText("go2rtc yayınlarını içe aktar");
+        importButton.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { importGo2rtcStreams(); }});
+        content.addView(importButton, rowLayoutParams());
 
         if (cameras.isEmpty()) {
             TextView empty = text("Henüz kamera eklenmedi.", 18, Color.LTGRAY);
@@ -62,6 +70,28 @@ public final class CameraListActivity extends BaseSectionActivity {
     }
 
     private void showAddDialog() { showCameraDialog(-1, null); }
+
+    private void importGo2rtcStreams() {
+        final AppSettings settings = new AppSettings(this);
+        final String base = settings.go2rtcUrl().replaceAll("/$", "");
+        if (base.length() == 0) { Toast.makeText(this, "Önce Ayarlar'dan go2rtc adresini girin", Toast.LENGTH_SHORT).show(); return; }
+        new Thread(new Runnable() { @Override public void run() {
+            final ArrayList<CameraSpec> found = new ArrayList<>();
+            try {
+                HttpURLConnection connection = (HttpURLConnection) new URL(base + "/api/streams").openConnection();
+                connection.setConnectTimeout(4000); connection.setReadTimeout(4000);
+                String auth = settings.go2rtcUser();
+                if (auth.length() > 0) { String token = android.util.Base64.encodeToString((auth + ":" + settings.go2rtcPassword()).getBytes("UTF-8"), android.util.Base64.NO_WRAP); connection.setRequestProperty("Authorization", "Basic " + token); }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream())); StringBuilder body = new StringBuilder(); String line; while ((line = reader.readLine()) != null) body.append(line); reader.close(); connection.disconnect();
+                JSONObject streams = new JSONObject(body.toString()); java.util.Iterator<String> keys = streams.keys();
+                CameraRepository repository = new CameraRepository(CameraListActivity.this); List<CameraSpec> existing = repository.getCameras();
+                java.net.URI serverUri = new java.net.URI(base); String host = serverUri.getHost();
+                while (keys.hasNext()) { String name = keys.next(); String rtsp = "rtsp://" + host + ":8554/" + Uri.encode(name); boolean duplicate = false; for (CameraSpec camera : existing) if (camera.url.equals(rtsp)) duplicate = true; if (!duplicate) found.add(new CameraSpec(name, rtsp, "", "")); }
+                existing.addAll(found); repository.replaceAll(existing);
+            } catch (Exception ignored) { }
+            runOnUiThread(new Runnable() { @Override public void run() { Toast.makeText(CameraListActivity.this, found.size() + " yayın içe aktarıldı", Toast.LENGTH_SHORT).show(); recreate(); }});
+        }}).start();
+    }
 
     private void showCameraDialog(final int editIndex, CameraSpec existing) {
         LinearLayout form = new LinearLayout(this);
