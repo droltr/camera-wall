@@ -78,6 +78,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 Tags matching `v*` trigger the release workflow. It builds a signed x86 APK,
 generates a SHA-256 checksum, and attaches both files to a GitHub Release.
+The project is currently in alpha; use tags such as `v0.1.0-alpha.1`. Alpha
+tags are automatically marked as pre-releases on GitHub. Beta and stable
+versions are intentionally deferred until the application matures.
 Configure these repository secrets first:
 
 - `CAMERA_CONFIG_BASE64`

@@ -18,11 +18,11 @@ Notable changes are documented here. This project follows
 
 - Documentation now accurately states the three-second page interval and x86-only ABI
 
-## [1.0.0] - 2026-09-13
+## [0.1.0-alpha.1] - 2026-09-13
 
 ### Added
 
 - Initial 2x2 RTSP camera wall application
 
-[Unreleased]: https://github.com/droltr/camera-wall/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/droltr/camera-wall/releases/tag/v1.0.0
+[Unreleased]: https://github.com/droltr/camera-wall/compare/v0.1.0-alpha.1...HEAD
+[0.1.0-alpha.1]: https://github.com/droltr/camera-wall/releases/tag/v0.1.0-alpha.1
