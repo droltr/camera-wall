@@ -107,3 +107,6 @@ Licensed under the [MIT License](LICENSE).
 Review the current accepted risks and planned hardening work in
 [docs/SECURITY_RISK_REGISTER.md](docs/SECURITY_RISK_REGISTER.md). Do not expose
 Frigate or go2rtc service ports to the internet.
+
+The staged interface, camera-management, discovery, compatibility, testing,
+branching, and commit plan is maintained in [docs/ROADMAP.md](docs/ROADMAP.md).
