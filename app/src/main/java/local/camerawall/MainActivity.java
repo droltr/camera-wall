@@ -16,12 +16,12 @@ import java.util.List;
 
 public final class MainActivity extends Activity {
     private static final int CAMERAS_PER_PAGE = 4;
-    private static final long PAGE_INTERVAL_MS = 3000;
 
     private final Handler handler = new Handler();
     private final CameraPlayerView[] tiles = new CameraPlayerView[CAMERAS_PER_PAGE];
     private LibVLC libVLC;
     private CameraRepository cameraRepository;
+    private AppSettings appSettings;
     private List<CameraSpec> cameras = new ArrayList<>();
     private int currentPage;
     private final Runnable nextPage = new Runnable() {
@@ -35,11 +35,14 @@ public final class MainActivity extends Activity {
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        appSettings = new AppSettings(this);
+        if (appSettings.keepScreenOn()) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         hideSystemUi();
         ArrayList<String> options = new ArrayList<>();
-        options.add("--no-audio"); options.add("--rtsp-tcp");
-        options.add("--network-caching=800"); options.add("--avcodec-hw=any");
+        options.add("--no-audio"); if (appSettings.rtspTcp()) options.add("--rtsp-tcp");
+        options.add("--network-caching=" + appSettings.networkCacheMs());
+        if (appSettings.hardwareAcceleration()) options.add("--avcodec-hw=any");
         libVLC = new LibVLC(this, options);
         cameraRepository = new CameraRepository(this);
         cameras = cameraRepository.getCameras();
@@ -88,7 +91,7 @@ public final class MainActivity extends Activity {
     }
     private void schedulePageChange() {
         handler.removeCallbacks(nextPage);
-        if (pageCount() > 1) handler.postDelayed(nextPage, PAGE_INTERVAL_MS);
+        if (pageCount() > 1 && appSettings.autoPage()) handler.postDelayed(nextPage, appSettings.pageIntervalSeconds() * 1000L);
     }
     private void openCamera(int slot) {
         int cameraIndex = currentPage * CAMERAS_PER_PAGE + slot;
