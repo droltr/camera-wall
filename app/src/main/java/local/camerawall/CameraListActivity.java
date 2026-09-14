@@ -30,6 +30,7 @@ public final class CameraListActivity extends BaseSectionActivity {
     private final Handler testHandler = new Handler();
     private MediaPlayer testPlayer;
     private LibVLC testLibVLC;
+    private RtspScanner scanner;
     @Override String sectionTitle() { return "Kameralar"; }
     @Override BottomNavigationBar.Destination destination() { return BottomNavigationBar.Destination.CAMERAS; }
 
@@ -55,6 +56,9 @@ public final class CameraListActivity extends BaseSectionActivity {
         Button discover = new Button(this); discover.setText("ONVIF cihazlarını ara");
         discover.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { discoverOnvif(); }});
         content.addView(discover, rowLayoutParams());
+        Button scan = new Button(this); scan.setText("Yerel RTSP adaylarını tara");
+        scan.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { scanRtsp(); }});
+        content.addView(scan, rowLayoutParams());
 
         if (cameras.isEmpty()) {
             TextView empty = text("Henüz kamera eklenmedi.", 18, Color.LTGRAY);
@@ -78,6 +82,16 @@ public final class CameraListActivity extends BaseSectionActivity {
         Toast.makeText(this, "ONVIF araması başlatıldı (4 sn)", Toast.LENGTH_SHORT).show();
         new Thread(new Runnable() { @Override public void run() { final java.util.Set<String> results; try { results = OnvifDiscovery.probe(4000); } catch (Exception error) { runOnUiThread(new Runnable() { @Override public void run() { Toast.makeText(CameraListActivity.this, "ONVIF araması başarısız", Toast.LENGTH_SHORT).show(); }}); return; }
             runOnUiThread(new Runnable() { @Override public void run() { StringBuilder text = new StringBuilder(); for (String value : results) text.append(value).append('\n'); if (text.length() == 0) text.append("Cihaz bulunamadı."); new AlertDialog.Builder(CameraListActivity.this).setTitle("ONVIF sonuçları").setMessage(text.toString()).setPositiveButton("Tamam", null).show(); }}); }}).start();
+    }
+
+    private void scanRtsp() {
+        new AlertDialog.Builder(this).setTitle("RTSP taraması").setMessage("Yerel /24 ağ taranacak. Portlar: 554, 8554, 10554. Kimlik doğrulama veya yol denenmez.").setNegativeButton("İptal", null).setPositiveButton("Başlat", (dialog, which) -> startRtspScan()).show();
+    }
+    private void startRtspScan() {
+        final ArrayList<String> results = new ArrayList<>();
+        scanner = new RtspScanner(this, new RtspScanner.Listener() { @Override public void onCandidate(final String host, final int port) { runOnUiThread(() -> results.add("rtsp://" + host + ":" + port)); }
+            @Override public void onFinished() { runOnUiThread(() -> { scanner = null; StringBuilder message = new StringBuilder(); for (String result : results) message.append(result).append('\n'); if (message.length() == 0) message.append("Aday bulunamadı."); new AlertDialog.Builder(CameraListActivity.this).setTitle("RTSP adayları").setMessage(message).setPositiveButton("Tamam", null).show(); }); }});
+        Toast.makeText(this, "Tarama başladı; durdurmak için geri dönün", Toast.LENGTH_SHORT).show();
     }
 
     private void importGo2rtcStreams() {
@@ -253,7 +267,7 @@ public final class CameraListActivity extends BaseSectionActivity {
         if (testLibVLC != null) { testLibVLC.release(); testLibVLC = null; }
     }
 
-    @Override protected void onDestroy() { stopTestPlayer(); super.onDestroy(); }
+    @Override protected void onDestroy() { if (scanner != null) scanner.stop(); stopTestPlayer(); super.onDestroy(); }
 
     private LinearLayout.LayoutParams rowLayoutParams() {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
