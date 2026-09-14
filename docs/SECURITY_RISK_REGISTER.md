@@ -52,6 +52,12 @@ fields preserve today's unauthenticated behavior. This allows server hardening
 to be tested camera by camera without changing source code or disrupting the
 current deployment.
 
+The alpha settings screen also stores the go2rtc address and optional
+credentials in private app preferences, masks the password field, and never
+logs credentials. Its connectivity check is a read-only request to
+`/api/streams`; it does not alter server configuration. These are preparation
+measures only and do not replace server-side authentication or network ACLs.
+
 ### Closure criteria
 
 - Unauthenticated RTSP playback from an ordinary LAN client fails.
