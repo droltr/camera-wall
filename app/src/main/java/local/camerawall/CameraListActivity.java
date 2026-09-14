@@ -125,6 +125,18 @@ public final class CameraListActivity extends BaseSectionActivity {
         row.addView(state);
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
+        Button up = new Button(this); up.setText("Yukarı");
+        up.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) {
+                if (new CameraRepository(CameraListActivity.this).move(position, -1)) recreate();
+            }
+        });
+        Button down = new Button(this); down.setText("Aşağı");
+        down.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) {
+                if (new CameraRepository(CameraListActivity.this).move(position, 1)) recreate();
+            }
+        });
         Button edit = new Button(this); edit.setText("Düzenle");
         edit.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showCameraDialog(position, camera); }
@@ -133,6 +145,8 @@ public final class CameraListActivity extends BaseSectionActivity {
         remove.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { confirmDelete(position, camera.name); }
         });
+        actions.addView(up, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(down, new LinearLayout.LayoutParams(0, -2, 1f));
         actions.addView(edit, new LinearLayout.LayoutParams(0, -2, 1f));
         actions.addView(remove, new LinearLayout.LayoutParams(0, -2, 1f));
         row.addView(actions);
