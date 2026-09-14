@@ -52,6 +52,9 @@ public final class CameraListActivity extends BaseSectionActivity {
         Button importButton = new Button(this); importButton.setText("go2rtc yayınlarını içe aktar");
         importButton.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { importGo2rtcStreams(); }});
         content.addView(importButton, rowLayoutParams());
+        Button discover = new Button(this); discover.setText("ONVIF cihazlarını ara");
+        discover.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { discoverOnvif(); }});
+        content.addView(discover, rowLayoutParams());
 
         if (cameras.isEmpty()) {
             TextView empty = text("Henüz kamera eklenmedi.", 18, Color.LTGRAY);
@@ -70,6 +73,12 @@ public final class CameraListActivity extends BaseSectionActivity {
     }
 
     private void showAddDialog() { showCameraDialog(-1, null); }
+
+    private void discoverOnvif() {
+        Toast.makeText(this, "ONVIF araması başlatıldı (4 sn)", Toast.LENGTH_SHORT).show();
+        new Thread(new Runnable() { @Override public void run() { final java.util.Set<String> results; try { results = OnvifDiscovery.probe(4000); } catch (Exception error) { runOnUiThread(new Runnable() { @Override public void run() { Toast.makeText(CameraListActivity.this, "ONVIF araması başarısız", Toast.LENGTH_SHORT).show(); }}); return; }
+            runOnUiThread(new Runnable() { @Override public void run() { StringBuilder text = new StringBuilder(); for (String value : results) text.append(value).append('\n'); if (text.length() == 0) text.append("Cihaz bulunamadı."); new AlertDialog.Builder(CameraListActivity.this).setTitle("ONVIF sonuçları").setMessage(text.toString()).setPositiveButton("Tamam", null).show(); }}); }}).start();
+    }
 
     private void importGo2rtcStreams() {
         final AppSettings settings = new AppSettings(this);
