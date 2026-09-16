@@ -214,9 +214,11 @@ public final class SettingsActivity extends BaseSectionActivity {
             boolean success = false;
             try {
                 byte[] encrypted = SettingsBackup.create(this, passphrase);
-                OutputStream output = getContentResolver().openOutputStream(target, "w");
-                if (output == null) throw new java.io.IOException("Could not open selected backup file");
-                try (OutputStream stream = output) { stream.write(encrypted); stream.flush(); }
+                try (OutputStream output = getContentResolver().openOutputStream(target, "w")) {
+                    if (output == null) throw new java.io.IOException("Could not open selected backup file");
+                    output.write(encrypted);
+                    output.flush();
+                }
                 Arrays.fill(encrypted, (byte) 0);
                 success = true;
             } catch (Exception ignored) {

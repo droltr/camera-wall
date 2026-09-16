@@ -81,3 +81,45 @@ screenshots or UI dumps to GitHub.
   scanned across the current source tree; no matches remain. A previous private
   address was removed from the tracked stability note; shared Git history still
   contains its old revision and is not rewritten here.
+
+### Test run — 2026-09-16 13:10:20–13:10:32 +03:00
+
+- Command: `./gradlew -PpublicRelease=true clean assembleDebug testDebugUnitTest lintDebug`
+  (host checks from this plan), run on branch `feature/modern-tablet-navigation`.
+- Toolchain: local JDK 17.0.20.1 and local Android SDK (both outside the repo,
+  under the project's ignored `.toolchain/` directory); Gradle daemon.
+- Result: `BUILD SUCCESSFUL in 12s`, 50 actionable tasks executed, exit code 0.
+- Unit tests: 8/8 passed, 0 failures, 0 errors
+  (`BackupCipherTest`: 5/5, `RtspCredentialsTest`: 3/3;
+  `app/build/test-results/testDebugUnitTest/`).
+- Lint (`lintDebug`): 0 errors, 50 warnings
+  (`app/build/reports/lint-results-debug.html`); one more warning than the
+  49 recorded in the prior run above — not yet triaged against that baseline.
+- `assembleDebug` produced `app/build/outputs/apk/debug/app-debug.apk`
+  (public-release camera configuration, so its embedded fallback camera list
+  is empty), 68,457,401 bytes.
+- A first attempt at 13:00–13:00 (JDK 21 from Homebrew, no `ANDROID_HOME`) failed
+  fast with "SDK location not found"; re-run above used the project's local
+  toolchain instead and succeeded.
+
+### Lint fix-up and re-verification — 2026-09-16 13:41:27–13:41:37 +03:00
+
+- Fixed the safe, behavior-preserving subset of warnings from the run above:
+  `BootReceiver` now checks the received action before launching
+  (`UnsafeProtectedBroadcastReceiver`); removed a dead `SDK_INT >= 17` check in
+  `CameraListActivity` (`ObsoleteSdkInt`); switched `Gravity.LEFT`/`RIGHT` to
+  `START`/`END` in `CameraPlayerView` and `SingleCameraActivity`
+  (`RtlHardcoded`); made the backup-export `OutputStream` a proper
+  try-with-resources in `SettingsActivity` (`Recycle`); removed 7 unused
+  color resources from `colors.xml` (`UnusedResources`).
+- Re-ran `./gradlew -PpublicRelease=true clean assembleDebug testDebugUnitTest
+  lintDebug`: `BUILD SUCCESSFUL in 9s`, exit code 0.
+- Unit tests: 8/8 passed, 0 failures, 0 errors (unchanged).
+- Lint: 0 errors, **38 warnings** (down from 50): `SetTextI18n` 29,
+  `DiscouragedApi` 4 (locked `screenOrientation`, an intentional kiosk-tablet
+  choice), `ViewConstructor` 3 (custom views are only ever created in code, a
+  known false positive), `UnusedAttribute` 1 (`usesCleartextTraffic`, API
+  23+ only, harmless below minSdk 21), `DataExtractionRules` 1 (deprecated
+  `allowBackup` attribute; app already ships `allowBackup="false"`).
+- Remaining categories are tracked for later triage rather than fixed here;
+  see the linked GitHub issue.

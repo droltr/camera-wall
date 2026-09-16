@@ -83,7 +83,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         nameTag.setSingleLine(true);
         nameTag.setPadding(Ui.dp(activity, 10), Ui.dp(activity, 6), Ui.dp(activity, 10), Ui.dp(activity, 6));
         nameTag.setBackground(Ui.shape(0xCC111B2D, Ui.OUTLINE, Ui.dp(activity, 10)));
-        FrameLayout.LayoutParams tagParams = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
+        FrameLayout.LayoutParams tagParams = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
         tagParams.setMargins(Ui.dp(activity, 8), Ui.dp(activity, 8), 0, 0);
         addView(nameTag, tagParams);
     }

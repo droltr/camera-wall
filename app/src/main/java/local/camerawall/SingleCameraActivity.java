@@ -104,7 +104,7 @@ public final class SingleCameraActivity extends Activity {
     }
 
     private FrameLayout.LayoutParams zoomControlsLayoutParams() {
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-2, dp(60), Gravity.BOTTOM | Gravity.RIGHT);
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(-2, dp(60), Gravity.BOTTOM | Gravity.END);
         params.setMargins(dp(12), 0, dp(16), dp(16));
         return params;
     }

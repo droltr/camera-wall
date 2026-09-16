@@ -170,7 +170,7 @@ public final class CameraListActivity extends BaseSectionActivity {
         final ArrayList<String> results = new ArrayList<>();
         scanner = new RtspScanner(this, new RtspScanner.Listener() { @Override public void onCandidate(final String host, final int port) { runOnUiThread(() -> results.add("rtsp://" + host + ":" + port)); }
             @Override public void onFinished() { runOnUiThread(() -> {
-                if (scanner == null || isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) return;
+                if (scanner == null || isFinishing() || isDestroyed()) return;
                 scanner = null;
                 ArrayList<CameraSpec> candidates = new ArrayList<>();
                 for (String result : results) {
