@@ -27,9 +27,10 @@ deferred until the interface, persistence, recovery, and device tests mature.
   checks and recovery expectations are agreed.
 - The current local feature branch contains additional interface, camera
   management, rotation, playback, settings backup, and documentation changes.
-  They remain unreviewed and unmerged; run the verification queue below before
-  preparing any repository update.
-- There are no open pull requests at this checkpoint.
+  Draft PR #64 is open with host checks passing locally; GitHub CI and real
+  device acceptance remain pending. Do not merge until the queue below passes.
+- The feature branch contains no camera configuration, generated APK, or
+  private IPv4 literal. The local code-8 APK is ignored by Git.
 
 ## Alpha checkpoint — 2026-09-14
 
