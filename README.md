@@ -4,98 +4,128 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Android 5.0+](https://img.shields.io/badge/Android-5.0%2B-green.svg)](https://developer.android.com/about/versions/lollipop)
 
-The app targets Android 16 (API 36) and remains installable on Android 5.0 (API 21) and newer devices.
+Camera Wall turns an Android phone or tablet into an RTSP camera monitor. The
+screen follows device rotation and adapts the camera grid to portrait or
+landscape. The ASUS MeMO Pad 7 K012 (x86, Android 5.0) is the legacy-device
+target; the same universal APK also packages ARM 32-bit and ARM 64-bit native
+libraries.
 
-A minimal Android app that turns an old x86 tablet into a dedicated RTSP
-camera monitor. It was built for an ASUS MeMO Pad 7 K012 running Android 5.0.
+The current published version is **v0.3.0-alpha.2**. It is an alpha release.
 
 ## Features
 
-- Fixed 2x2 landscape grid in immersive full-screen mode
-- Full camera frames without cropping or stretching
-- Automatic paging for more than four cameras, every three seconds
-- Decoding only for streams on the visible page
-- RTSP over TCP with an 800 ms network cache
-- Hardware-accelerated H.264 decoding and disabled audio
-- Automatic reconnect attempts every 15 seconds
-- Start on boot and keep the screen awake while visible
+### Live camera wall
 
-## Development status
+- Choose a **4-camera 2x2** or **8-camera 4x2** landscape layout. The selection
+  is saved on the device. In portrait, the 8-camera layout changes to 2 columns
+  and 4 rows.
+- Swipe left or right across the camera wall to move between camera pages.
+  Automatic paging remains available for additional pages.
+- When more cameras are configured than fit in the selected layout, automatic
+  paging can cycle through the remaining camera groups. It can be enabled or
+  disabled and its interval can be adjusted.
+- Tap a tile to open that camera in a single-camera full-screen view.
+- Pinch to zoom in or out in the single-camera view. On-screen plus/minus
+  controls, a reset button, and double-tap zoom reset are also available.
+- Preserve the video aspect ratio, show optional camera-name labels, and display
+  connection status while a stream connects or recovers.
+- Play RTSP without audio using TCP transport. The player retries a failed
+  connection automatically.
+- Keep the screen awake while the wall is open and launch the app automatically
+  after device boot.
 
-Camera Wall is in active alpha development. The ASUS K012 and the existing
-camera wall must remain operational at every accepted checkpoint.
+### Camera management
 
-Follow live status in the public
-[Camera Wall Alpha Roadmap](https://github.com/users/droltr/projects/2), or
-review the ordered parent tracker in
-[#31](https://github.com/droltr/camera-wall/issues/31).
+- Add RTSP cameras manually. Search the saved list, hold the **Sürükle** handle
+  and drop a camera in its new position to reorder it, or edit and delete it.
+- Test a camera connection while editing its settings.
+- Camera names, stream addresses, and optional per-camera RTSP usernames and
+  passwords are stored in the app's private local preferences. A discovered
+  candidate can be saved with both fields blank; enter credentials later by
+  editing that camera if the stream requires them.
+- Import configured stream names from a go2rtc server.
+- Discover ONVIF device endpoint candidates on the local network. Discovery
+  lets you select candidates to save; it does not automatically add cameras.
+  ONVIF device endpoints are not RTSP video paths, so review or edit the saved
+  RTSP address before playback.
+- Optionally scan the connected local `/24` network for open RTSP ports
+  `554`, `8554`, and `10554`. This finds host/port candidates only; it does not
+  guess stream paths or credentials. Select any candidates to save them, then
+  edit the RTSP path if needed. Credentials are optional during save and can be
+  entered later. The scan is user-started and can be cancelled.
+- Recognize Hikvision-style `/Streaming/Channels/` URLs. When a go2rtc host is
+  configured, supported Hikvision channels can use the corresponding go2rtc
+  restream. The ASUS K012 playback path falls back from the main stream to the
+  camera's lower-bandwidth substream when applicable.
 
-| Workstream | Status | Tracking |
-|---|---|---|
-| Proven playback foundation | Complete | [#18](https://github.com/droltr/camera-wall/issues/18), [#16](https://github.com/droltr/camera-wall/issues/16) |
-| Home and bottom navigation | Complete | [#10](https://github.com/droltr/camera-wall/issues/10) |
-| Tap-to-fullscreen camera | Complete | [#13](https://github.com/droltr/camera-wall/issues/13) |
-| Camera management | Complete | [#19](https://github.com/droltr/camera-wall/issues/19), [#11](https://github.com/droltr/camera-wall/issues/11), [#20](https://github.com/droltr/camera-wall/issues/20), [#17](https://github.com/droltr/camera-wall/issues/17), [#21](https://github.com/droltr/camera-wall/issues/21) |
-| Application and go2rtc settings | Complete | [#22](https://github.com/droltr/camera-wall/issues/22), [#23](https://github.com/droltr/camera-wall/issues/23) |
-| go2rtc stream import | Complete | [#24](https://github.com/droltr/camera-wall/issues/24) |
-| ONVIF and bounded RTSP discovery | Complete | [#25](https://github.com/droltr/camera-wall/issues/25), [#26](https://github.com/droltr/camera-wall/issues/26) |
-| Launcher icon | Complete | [#27](https://github.com/droltr/camera-wall/issues/27) |
-| Network hardening | Risk accepted temporarily | [#28](https://github.com/droltr/camera-wall/issues/28) |
-| Extended ASUS K012 stability test | Alpha checkpoint recorded | [#29](https://github.com/droltr/camera-wall/issues/29) |
+### Settings and appearance
 
-Alpha milestones: [v0.2 foundation](https://github.com/droltr/camera-wall/milestone/1),
-[v0.3 camera management](https://github.com/droltr/camera-wall/milestone/2),
-[v0.4 settings](https://github.com/droltr/camera-wall/milestone/3),
-[v0.5 go2rtc import](https://github.com/droltr/camera-wall/milestone/4),
-[v0.6 discovery](https://github.com/droltr/camera-wall/milestone/5), and
-[v0.7 hardening](https://github.com/droltr/camera-wall/milestone/6).
-
-See [docs/DEVELOPMENT_PROCESS.md](docs/DEVELOPMENT_PROCESS.md) for how an item
-moves from plan to code, real-device validation, merge, changelog, and alpha
-release. Completed history remains visible through closed Issues, merged pull
-requests, the changelog, and GitHub Releases.
+- Modern dark interface with a dedicated home, Cameras, and Settings section.
+- Rotate the device between portrait and landscape. The eight-camera grid uses
+  four rows by two columns in portrait and two rows by four columns in landscape.
+- Configure paging interval, automatic paging, RTSP-over-TCP, network buffer,
+  camera labels, and keep-screen-on behavior. Paging and layout controls use
+  labeled selectors; the buffer value is shown in milliseconds and seconds.
+- Enter and test a go2rtc server address with optional credentials.
+- Export and restore camera and app settings in a password-encrypted backup.
+  The backup includes saved stream addresses and credentials. Choose device
+  storage in the file picker to keep the backup on the tablet; use a strong
+  passphrase of at least 12 characters and keep it safe, because it cannot be
+  recovered if forgotten.
+- View the app version, Android version, and license in **About**.
+- Reset app preferences to their defaults.
 
 ## Compatibility
 
-The application requires Android 5.0 (API 21) or newer. The APK packages
-**x86**, **armeabi-v7a**, and **arm64-v8a** so the original ASUS K012 and ARM
-phones/tablets can use the same alpha build.
+The release is **one universal APK**, not separate Android 5 and Android 16
+packages:
 
-## Camera configuration
+| Item | Support |
+|---|---|
+| Minimum Android version | Android 5.0 (API 21) |
+| Target SDK | Android 16 (API 36) |
+| Native ABIs | `x86`, `armeabi-v7a`, `arm64-v8a` |
+| ASUS K012 | x86 ABI is included |
 
-Camera URLs are read at build time from an untracked `camera.properties` file.
-Copy the supplied template, then edit it:
+ABI and Android-version support describe package compatibility. Actual stream
+playback also depends on the device, camera, and local network.
+
+## Camera setup
+
+You can add cameras in the app after installation. For a local development APK,
+the build can also use `camera.properties` as its initial camera list:
 
 ```bash
 cp camera.properties.example camera.properties
 ```
 
+Edit the copied file with your own values. For example:
+
 ```properties
-camera.1.name=FRONT DOOR
+camera.1.name=Front Door
 camera.1.url=rtsp://go2rtc.example:8554/frontdoor
-camera.1.username=camera_wall
-camera.1.password=replace-with-a-strong-password
-camera.2.name=OFFICE
+camera.1.username=
+camera.1.password=
+camera.2.name=Office
 camera.2.url=rtsp://go2rtc.example:8554/office
+camera.2.username=
+camera.2.password=
 ```
 
-Entries must be numbered consecutively from 1. Every four cameras form a page.
-The `username` and `password` fields are optional, so existing unauthenticated
-go2rtc streams continue to work. When RTSP authentication is enabled later,
-credentials can be added without changing application source code.
-`camera.properties` is ignored by Git because RTSP URLs may contain credentials.
-The compiled APK still contains the configured URLs, so distribute private
-builds accordingly.
-
-For cameras with low concurrent-session limits, prefer a restream server such
-as Frigate's go2rtc or MediaMTX instead of connecting directly to each camera.
+Camera entries must be numbered consecutively from `1`. Keep real addresses and
+credentials out of source files and Git. `camera.properties` is ignored by Git.
+Local debug APKs built with this file contain the configured values; handle
+those APKs as private files. The public release build deliberately starts with
+an empty camera list.
 
 ## Build
 
 Requirements:
 
 - JDK 17
-- Android SDK with compile SDK 35
+- Android SDK Platform 36 and Build Tools 36
+
+Build a local debug APK:
 
 ```bash
 JAVA_HOME=/path/to/jdk-17 \
@@ -103,47 +133,52 @@ ANDROID_HOME=/path/to/android-sdk \
 ./gradlew clean assembleDebug
 ```
 
-The debug APK is generated at `app/build/outputs/apk/debug/app-debug.apk`.
+The APK is written to `app/build/outputs/apk/debug/app-debug.apk`. If
+`camera.properties` exists, its camera entries are included in this local debug
+build.
 
-## Install
-
-```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
+The Android CI workflow builds the debug APK for pushes and pull requests to
+`main`. Tagged releases are built as signed, public APKs by GitHub Actions; the
+workflow uses repository signing secrets and does not include local camera
+configuration.
 
 ## Releases
 
-Tags matching `v*` trigger the release workflow. It builds a signed universal
-APK containing x86 and ARM ABIs,
-generates a SHA-256 checksum, and attaches both files to a GitHub Release.
-The project is currently in alpha; use tags such as `v0.3.0-alpha.2`. Alpha
-tags are automatically marked as pre-releases on GitHub. Beta and stable
-versions are intentionally deferred until the application matures. Published
-APKs contain no camera configuration; add cameras on the device after
-installation. Configure these repository secrets before publishing:
+Download the current APK and its SHA-256 checksum from
+[GitHub Releases](https://github.com/droltr/camera-wall/releases). The release
+workflow creates an alpha pre-release for tags such as `v0.3.0-alpha.2`.
+
+The public release build uses `-PpublicRelease=true`, which excludes
+`camera.properties` even if a local copy exists. Maintainers must configure
+these GitHub Actions repository secrets for signing:
 
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Encode the keystore with `base64 -w 0 release.keystore`. Never commit camera
-credentials, the keystore, or signing passwords.
+Never commit camera addresses, usernames, passwords, keystores, or signing
+passwords.
+
+## Security and privacy
+
+Camera configuration and go2rtc preferences are stored in the app's private
+data on the device. A local debug APK may also contain values from
+`camera.properties`; the public release build excludes them. Review
+[`.gitignore`](.gitignore) before adding local configuration or generated APKs
+to Git. Never publish a personalized APK that contains private camera data.
+
+The app connects to the go2rtc HTTP API when importing streams or testing the
+server. HTTP does not encrypt credentials or responses. Use this feature only
+on a trusted, isolated local network, prefer HTTPS where available, and do not
+expose go2rtc or camera service ports to the public internet. Read the
+[security risk register](docs/SECURITY_RISK_REGISTER.md) before deployment.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Changes are recorded in
+See [CONTRIBUTING.md](CONTRIBUTING.md). User-visible changes belong in
 [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-Licensed under the [MIT License](LICENSE).
-
-## Security
-
-Review the current accepted risks and planned hardening work in
-[docs/SECURITY_RISK_REGISTER.md](docs/SECURITY_RISK_REGISTER.md). Do not expose
-Frigate or go2rtc service ports to the internet.
-
-The staged interface, camera-management, discovery, compatibility, testing,
-branching, and commit plan is maintained in [docs/ROADMAP.md](docs/ROADMAP.md).
+Camera Wall is licensed under the [MIT License](LICENSE).

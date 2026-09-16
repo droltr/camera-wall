@@ -5,6 +5,19 @@ Notable changes are documented here. This project follows
 
 ## [Unreleased]
 
+### Changed
+
+- Make section navigation clearer with larger labeled tabs and custom icons.
+- Support portrait and landscape rotation, swiping between camera pages, and zoom controls in single-camera view.
+- Use labeled compact selectors for wall size, automatic paging, and page duration; explain network buffer in milliseconds and seconds.
+- Keep camera management reorderable by drag-and-drop and searchable as the saved list grows.
+
+### Added
+
+- Let users select discovered RTSP and ONVIF candidates to save locally, then add credentials later if needed.
+- Add password-encrypted settings/camera backup and restore plus an About screen.
+- Add regression tests for backup encryption, wrong passwords, tampering, and passphrase validation.
+
 ## [0.3.0-alpha.2] - 2026-09-16
 
 ### Added

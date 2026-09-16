@@ -10,6 +10,27 @@ before merge.
 The project remains in alpha. Beta and stable releases are intentionally
 deferred until the interface, persistence, recovery, and device tests mature.
 
+## Status reconciliation — 2026-09-16
+
+- GitHub `v0.2.0-alpha` is closed. The issue sets attached to `v0.3.0-alpha`
+  through `v0.6.0-alpha` are closed because their corresponding PRs were
+  merged. This only reports completion of those original tracked scopes; newer
+  user-requested work on the local feature branch is not represented by them.
+- `v0.7.0-alpha` is in progress: launcher icon issue #27 is complete; network
+  hardening #28, the extended ASUS K012 test #29, thermal investigation #57,
+  main-branch protection #58, accessibility #59, RTSP credential-field
+  separation #60, scanner cancellation #61, authenticated go2rtc testing #62,
+  and privacy cleanup #63 are open. The milestone is therefore 1/10 complete,
+  not complete.
+- The current `main` history includes merged PRs #55 and #56. GitHub reports
+  branch protection disabled; do not change branch settings until required
+  checks and recovery expectations are agreed.
+- The current local feature branch contains additional interface, camera
+  management, rotation, playback, settings backup, and documentation changes.
+  They remain unreviewed and unmerged; run the verification queue below before
+  preparing any repository update.
+- There are no open pull requests at this checkpoint.
+
 ## Alpha checkpoint — 2026-09-14
 
 Completed and merged into `main`:
@@ -30,24 +51,56 @@ screen currently presents the camera images rotated relative to the physical
 mount; this is recorded as a follow-up rather than changing the known-good
 playback path during this pause.
 
-## Remaining backlog
+## Remaining work — ordered
 
-1. **Server-side network hardening (#28, deferred):** authenticate/restrict
-   Frigate and go2rtc APIs and RTSP, rotate credentials, and verify firewall
-   boundaries. This must be coordinated with the deployment and is not an app-
-   only change.
-2. **Extended pre-beta test:** run the documented 30-minute+ playback,
-   reconnect, paging, fullscreen, reboot, and memory/CPU checks on the K012.
-3. **Orientation polish:** determine whether rotation belongs to camera source,
-   device mounting, or an explicit per-camera transform setting.
-4. **ARM physical-device validation:** install the universal APK on an ARM
-   device; x86 APK contents are already verified on the K012.
-5. **Release preparation:** configure signing secrets, create a signed
-   `0.3.0-alpha.1` GitHub pre-release, and attach checksums.
-6. **Optional polish:** apply all settings to every player option, improve
-   discovery-result import UX, and add automated UI/regression tests.
+1. **Verify current local changes before any further install or repository
+   update.** The local branch now has UI and persistence changes not covered by
+   the original GitHub issues. Current checks: debug build succeeds and
+   Android lint succeeds with warnings. Five host-side tests cover backup
+   encryption round trips, wrong passwords, modified ciphertext/IV, and
+   short-password rejection. Full backup restore, settings, camera
+   persistence/reordering, and paging still need regression coverage before
+   this branch is ready for review. Keep `camera.properties` and generated
+   APKs local.
+2. **Main-branch governance (#58):** enable protection against force-push and
+   deletion and require agreed PR checks. GitHub currently reports `main` as
+   unprotected. Review CI check names before changing repository settings.
+3. **Thermal investigation (#57):** the ASUS K012 reported elevated `skin1`
+   and chip temperatures during playback, and later readings fluctuated while
+   Camera Wall was stopped. The cause is undetermined. Playback has been
+   stopped; confirm device-specific limits and isolate charging, ambient
+   temperature, and stream load before resuming on-device tests.
+4. **Accessibility (#59):** the custom swipe and zoom touch handlers now call
+   accessibility click actions and Android lint no longer reports those
+   warnings. Verify navigation with TalkBack on the cooled K012 before closing.
+5. **Privacy hygiene (#63):** a local Wi-Fi ADB address was removed from the
+   current tracked device notes. Review repository history; do not rewrite
+   shared history without coordination.
+6. **Camera management defects (#60, #61, #62):** URL credential separation,
+   scan cancellation/no-address handling, and authenticated go2rtc connection
+   testing have local fixes. Host checks pass; verify the UI and network paths
+   on a safe device/test server before closing these issues.
+7. **Extended ASUS K012 test (#29):** run at least 30 minutes of playback,
+   reconnect, paging, fullscreen, reboot, and memory/CPU checks. The issue is
+   open; the earlier alpha checkpoint did not satisfy this extended test.
+8. **Orientation polish:** verify portrait/landscape behavior and determine
+   whether the rotated image comes from camera orientation, tablet mounting, or
+   an application transform. Do not rotate or alter the camera source until
+   the cause is established.
+9. **Server-side network hardening (#28):** authenticate/restrict Frigate and
+   go2rtc APIs and RTSP, rotate credentials, and verify firewall boundaries.
+   This requires a deployment plan and authorized access; it is not an app-only
+   change and is not started against the live network.
+10. **ARM physical-device validation:** validate the universal APK on an ARM
+   device. The available ASUS K012 is x86; no ARM device is currently available
+   for this checkpoint.
+11. **Release preparation:** after review and test gates pass, configure signing,
+   create a signed release, and attach checksums. Do not include local camera
+   configuration or credentials in source, artifacts, or release notes.
+12. **Optional polish:** finish settings propagation to every player option and
+   improve discovery-result import UX.
 
-No beta or stable work is scheduled until the first two items are complete.
+Do not schedule beta or stable work until items 1–4 are complete.
 
 ## Target navigation
 
