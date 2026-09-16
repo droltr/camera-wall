@@ -9,6 +9,10 @@ build/
 .toolchain/
 local.properties
 camera.properties
+# Local device and session notes may contain private network details or identifiers.
+docs/DEVICE_PROFILE.md
+docs/SESSION_HANDOFF_*.md
+docs/USER_COMPLAINT_*.md
 *.hprof
 
 # Tablet-recovery working files (not part of this software project)

@@ -2,6 +2,9 @@
 # camera.properties is ignored by Git and may contain private RTSP credentials.
 camera.1.name=FRONT DOOR
 camera.1.url=rtsp://go2rtc.example:8554/frontdoor
+# Optional. Prefer these separate fields instead of embedding credentials in the URL.
+# camera.1.username=camera_wall
+# camera.1.password=replace-with-a-strong-password
 camera.2.name=OFFICE
 camera.2.url=rtsp://go2rtc.example:8554/office
 camera.3.name=ENTRANCE

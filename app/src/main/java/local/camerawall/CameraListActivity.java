@@ -1,0 +1,300 @@
+package local.camerawall;
+
+import android.app.AlertDialog;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Handler;
+import android.text.InputType;
+import android.view.Gravity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.videolan.libvlc.LibVLC;
+import org.videolan.libvlc.Media;
+import org.videolan.libvlc.MediaPlayer;
+import org.json.JSONObject;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class CameraListActivity extends BaseSectionActivity {
+    private final Handler testHandler = new Handler();
+    private MediaPlayer testPlayer;
+    private LibVLC testLibVLC;
+    private RtspScanner scanner;
+    @Override String sectionTitle() { return "Kameralar"; }
+    @Override BottomNavigationBar.Destination destination() { return BottomNavigationBar.Destination.CAMERAS; }
+
+    @Override View createContentView() {
+        List<CameraSpec> cameras = new CameraRepository(this).getCameras();
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setPadding(dp(22), dp(16), dp(22), dp(18));
+
+        TextView heading = text("Kameralar", 26, Ui.PRIMARY);
+        heading.setTypeface(null, android.graphics.Typeface.BOLD);
+        heading.setPadding(0, 0, 0, dp(2));
+        content.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+        TextView intro = text("Kameralarınızı ekleyin, düzenleyin ve bağlantıyı kontrol edin.", 14, Ui.SECONDARY);
+        intro.setPadding(0, 0, 0, dp(12));
+        content.addView(intro);
+
+        Button add = new Button(this);
+        add.setText("+ Kamera ekle");
+        Ui.button(add, true);
+        add.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showAddDialog(); }
+        });
+        content.addView(add, rowLayoutParams());
+        Button importButton = new Button(this); importButton.setText("go2rtc yayınlarını içe aktar"); Ui.button(importButton, false);
+        importButton.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { importGo2rtcStreams(); }});
+        content.addView(importButton, rowLayoutParams());
+        Button discover = new Button(this); discover.setText("Ağda ONVIF kamerası bul"); Ui.button(discover, false);
+        discover.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { discoverOnvif(); }});
+        content.addView(discover, rowLayoutParams());
+        Button scan = new Button(this); scan.setText("Yerel RTSP adreslerini tara"); Ui.button(scan, false);
+        scan.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { scanRtsp(); }});
+        content.addView(scan, rowLayoutParams());
+
+        if (cameras.isEmpty()) {
+            TextView empty = text("Henüz kamera eklenmedi.\nBaşlamak için “Kamera ekle” seçeneğine dokunun.", 16, Ui.SECONDARY);
+            empty.setGravity(Gravity.CENTER);
+            content.addView(empty, new LinearLayout.LayoutParams(-1, 0, 1f));
+        } else {
+            for (int index = 0; index < cameras.size(); index++) {
+                content.addView(cameraRow(index, cameras.get(index)), rowLayoutParams());
+            }
+        }
+
+        ScrollView scroll = new ScrollView(this);
+        scroll.setBackgroundColor(Color.BLACK);
+        scroll.addView(content, new ScrollView.LayoutParams(-1, -2));
+        return scroll;
+    }
+
+    private void showAddDialog() { showCameraDialog(-1, null); }
+
+    private void discoverOnvif() {
+        Toast.makeText(this, "ONVIF araması başlatıldı (4 sn)", Toast.LENGTH_SHORT).show();
+        new Thread(new Runnable() { @Override public void run() { final java.util.Set<String> results; try { results = OnvifDiscovery.probe(4000); } catch (Exception error) { runOnUiThread(new Runnable() { @Override public void run() { Toast.makeText(CameraListActivity.this, "ONVIF araması başarısız", Toast.LENGTH_SHORT).show(); }}); return; }
+            runOnUiThread(new Runnable() { @Override public void run() { StringBuilder text = new StringBuilder(); for (String value : results) text.append(value).append('\n'); if (text.length() == 0) text.append("Cihaz bulunamadı."); new AlertDialog.Builder(CameraListActivity.this).setTitle("ONVIF sonuçları").setMessage(text.toString()).setPositiveButton("Tamam", null).show(); }}); }}).start();
+    }
+
+    private void scanRtsp() {
+        new AlertDialog.Builder(this).setTitle("RTSP taraması").setMessage("Yerel /24 ağ taranacak. Portlar: 554, 8554, 10554. Kimlik doğrulama veya yol denenmez.").setNegativeButton("İptal", null).setPositiveButton("Başlat", (dialog, which) -> startRtspScan()).show();
+    }
+    private void startRtspScan() {
+        final ArrayList<String> results = new ArrayList<>();
+        scanner = new RtspScanner(this, new RtspScanner.Listener() { @Override public void onCandidate(final String host, final int port) { runOnUiThread(() -> results.add("rtsp://" + host + ":" + port)); }
+            @Override public void onFinished() { runOnUiThread(() -> { scanner = null; StringBuilder message = new StringBuilder(); for (String result : results) message.append(result).append('\n'); if (message.length() == 0) message.append("Aday bulunamadı."); new AlertDialog.Builder(CameraListActivity.this).setTitle("RTSP adayları").setMessage(message).setPositiveButton("Tamam", null).show(); }); }});
+        Toast.makeText(this, "Tarama başladı; durdurmak için geri dönün", Toast.LENGTH_SHORT).show();
+    }
+
+    private void importGo2rtcStreams() {
+        final AppSettings settings = new AppSettings(this);
+        final String base = settings.go2rtcUrl().replaceAll("/$", "");
+        if (base.length() == 0) { Toast.makeText(this, "Önce Ayarlar'dan go2rtc adresini girin", Toast.LENGTH_SHORT).show(); return; }
+        new Thread(new Runnable() { @Override public void run() {
+            final ArrayList<CameraSpec> found = new ArrayList<>();
+            try {
+                HttpURLConnection connection = (HttpURLConnection) new URL(base + "/api/streams").openConnection();
+                connection.setConnectTimeout(4000); connection.setReadTimeout(4000);
+                String auth = settings.go2rtcUser();
+                if (auth.length() > 0) { String token = android.util.Base64.encodeToString((auth + ":" + settings.go2rtcPassword()).getBytes("UTF-8"), android.util.Base64.NO_WRAP); connection.setRequestProperty("Authorization", "Basic " + token); }
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream())); StringBuilder body = new StringBuilder(); String line; while ((line = reader.readLine()) != null) body.append(line); reader.close(); connection.disconnect();
+                JSONObject streams = new JSONObject(body.toString()); java.util.Iterator<String> keys = streams.keys();
+                CameraRepository repository = new CameraRepository(CameraListActivity.this); List<CameraSpec> existing = repository.getCameras();
+                java.net.URI serverUri = new java.net.URI(base); String host = serverUri.getHost();
+                while (keys.hasNext()) { String name = keys.next(); String rtsp = "rtsp://" + host + ":8554/" + Uri.encode(name); boolean duplicate = false; for (CameraSpec camera : existing) if (camera.url.equals(rtsp)) duplicate = true; if (!duplicate) found.add(new CameraSpec(name, rtsp, "", "")); }
+                existing.addAll(found); repository.replaceAll(existing);
+            } catch (Exception ignored) { }
+            runOnUiThread(new Runnable() { @Override public void run() { Toast.makeText(CameraListActivity.this, found.size() + " yayın içe aktarıldı", Toast.LENGTH_SHORT).show(); recreate(); }});
+        }}).start();
+    }
+
+    private void showCameraDialog(final int editIndex, CameraSpec existing) {
+        LinearLayout form = new LinearLayout(this);
+        form.setOrientation(LinearLayout.VERTICAL);
+        form.setPadding(dp(24), dp(8), dp(24), 0);
+        final EditText name = field("Kamera adı");
+        final EditText url = field("RTSP adresi (rtsp://…)");
+        final EditText username = field("Kullanıcı adı (isteğe bağlı)");
+        final EditText password = field("Parola (isteğe bağlı)");
+        if (existing != null) {
+            name.setText(existing.name); url.setText(existing.url);
+            username.setText(existing.username); password.setText(existing.password);
+        }
+        password.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        form.addView(name); form.addView(url); form.addView(username); form.addView(password);
+
+        final AlertDialog dialog = new AlertDialog.Builder(this)
+            .setTitle(editIndex < 0 ? "Kamera ekle" : "Kamerayı düzenle")
+            .setView(form)
+            .setNegativeButton("İptal", null)
+            .setPositiveButton("Kaydet", null)
+            .create();
+        dialog.setOnShowListener(new android.content.DialogInterface.OnShowListener() {
+            @Override public void onShow(android.content.DialogInterface ignored) {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(new View.OnClickListener() {
+                    @Override public void onClick(View view) {
+                        String cameraName = name.getText().toString().trim();
+                        String cameraUrl = url.getText().toString().trim();
+                        if (cameraName.length() == 0 || !cameraUrl.startsWith("rtsp://")) {
+                            url.setError("Ad ve geçerli rtsp:// adresi gerekli");
+                            return;
+                        }
+                        CameraSpec camera = new CameraSpec(cameraName, cameraUrl,
+                            username.getText().toString().trim(), password.getText().toString());
+                        CameraRepository repository = new CameraRepository(CameraListActivity.this);
+                        boolean saved = editIndex < 0 ? repository.add(camera) : repository.update(editIndex, camera);
+                        if (!saved) {
+                            url.setError("Kamera kaydedilemedi");
+                            return;
+                        }
+                        dialog.dismiss();
+                        recreate();
+                    }
+                });
+            }
+        });
+        dialog.show();
+    }
+
+    private EditText field(String hint) {
+        EditText field = new EditText(this);
+        field.setHint(hint);
+        field.setSingleLine(true);
+        field.setTextColor(Color.WHITE);
+        field.setHintTextColor(Color.GRAY);
+        return field;
+    }
+
+    private View cameraRow(final int position, final CameraSpec camera) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.VERTICAL);
+        row.setPadding(dp(16), dp(10), dp(16), dp(10));
+        Ui.panel(row);
+
+        row.addView(text(camera.name, 18, Ui.PRIMARY));
+        TextView endpoint = text(sanitizedEndpoint(camera.url), 13, Ui.SECONDARY);
+        endpoint.setPadding(0, dp(4), 0, 0);
+        row.addView(endpoint);
+        TextView state = text("●  KAYITLI", 11, Ui.ACCENT);
+        state.setPadding(0, dp(4), 0, 0);
+        row.addView(state);
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        Button up = new Button(this); up.setText("Yukarı"); Ui.button(up, false);
+        up.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) {
+                if (new CameraRepository(CameraListActivity.this).move(position, -1)) recreate();
+            }
+        });
+        Button down = new Button(this); down.setText("Aşağı"); Ui.button(down, false);
+        down.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) {
+                if (new CameraRepository(CameraListActivity.this).move(position, 1)) recreate();
+            }
+        });
+        Button test = new Button(this); test.setText("Bağlantı testi"); Ui.button(test, false);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { testConnection(camera); }
+        });
+        Button edit = new Button(this); edit.setText("Düzenle"); Ui.button(edit, false);
+        edit.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { showCameraDialog(position, camera); }
+        });
+        Button remove = new Button(this); remove.setText("Sil"); Ui.button(remove, false); remove.setTextColor(Ui.DANGER);
+        remove.setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View view) { confirmDelete(position, camera.name); }
+        });
+        actions.addView(up, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(down, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(test, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(edit, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(remove, new LinearLayout.LayoutParams(0, -2, 1f));
+        row.addView(actions);
+        row.setContentDescription(camera.name + ", kayıtlı kamera");
+        return row;
+    }
+
+    private void confirmDelete(final int position, String name) {
+        new AlertDialog.Builder(this)
+            .setTitle("Kamera silinsin mi?")
+            .setMessage(name)
+            .setNegativeButton("İptal", null)
+            .setPositiveButton("Sil", new android.content.DialogInterface.OnClickListener() {
+                @Override public void onClick(android.content.DialogInterface dialog, int which) {
+                    new CameraRepository(CameraListActivity.this).delete(position);
+                    recreate();
+                }
+            }).show();
+    }
+
+    private void testConnection(final CameraSpec camera) {
+        stopTestPlayer();
+        ArrayList<String> options = new ArrayList<>();
+        options.add("--no-audio"); options.add("--rtsp-tcp"); options.add("--network-caching=800");
+        testLibVLC = new LibVLC(this, options);
+        testPlayer = new MediaPlayer(testLibVLC);
+        testPlayer.setEventListener(new MediaPlayer.EventListener() {
+            @Override public void onEvent(MediaPlayer.Event event) {
+                if (event.type == MediaPlayer.Event.Playing) {
+                    testHandler.post(new Runnable() { @Override public void run() {
+                        Toast.makeText(CameraListActivity.this, camera.name + ": bağlantı başarılı", Toast.LENGTH_SHORT).show(); stopTestPlayer();
+                    }});
+                } else if (event.type == MediaPlayer.Event.EncounteredError || event.type == MediaPlayer.Event.EndReached) {
+                    testHandler.post(new Runnable() { @Override public void run() {
+                        Toast.makeText(CameraListActivity.this, camera.name + ": bağlantı başarısız", Toast.LENGTH_SHORT).show(); stopTestPlayer();
+                    }});
+                }
+            }
+        });
+        Media media = new Media(testLibVLC, camera.playbackUri(new AppSettings(this).go2rtcUrl()));
+        media.addOption(":rtsp-tcp"); media.addOption(":no-audio"); media.addOption(":network-caching=800");
+        testPlayer.setMedia(media); media.release(); testPlayer.play();
+        testHandler.postDelayed(new Runnable() { @Override public void run() {
+            if (testPlayer != null) { Toast.makeText(CameraListActivity.this, camera.name + ": zaman aşımı", Toast.LENGTH_SHORT).show(); stopTestPlayer(); }
+        }}, 8000);
+    }
+
+    private void stopTestPlayer() {
+        if (testPlayer != null) { testPlayer.setEventListener(null); testPlayer.stop(); testPlayer.release(); testPlayer = null; }
+        if (testLibVLC != null) { testLibVLC.release(); testLibVLC = null; }
+    }
+
+    @Override protected void onDestroy() { if (scanner != null) scanner.stop(); stopTestPlayer(); super.onDestroy(); }
+
+    private LinearLayout.LayoutParams rowLayoutParams() {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+        params.setMargins(0, 0, 0, dp(8));
+        return params;
+    }
+
+    private TextView text(String value, int size, int color) {
+        TextView view = new TextView(this);
+        view.setText(value);
+        view.setTextSize(size);
+        view.setTextColor(color);
+        return view;
+    }
+
+    private String sanitizedEndpoint(String value) {
+        Uri uri = Uri.parse(value);
+        String host = uri.getHost();
+        if (host == null) return "RTSP adresi";
+        StringBuilder result = new StringBuilder("rtsp://").append(host);
+        if (uri.getPort() >= 0) result.append(':').append(uri.getPort());
+        if (uri.getPath() != null) result.append(uri.getPath());
+        return result.toString();
+    }
+}
