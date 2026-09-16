@@ -52,56 +52,66 @@ screen currently presents the camera images rotated relative to the physical
 mount; this is recorded as a follow-up rather than changing the known-good
 playback path during this pause.
 
-## Remaining work — ordered
+## Remaining work — execution queue, reconciled 2026-09-16
 
-1. **Verify current local changes before any further install or repository
-   update.** The local branch now has UI and persistence changes not covered by
-   the original GitHub issues. Current checks: debug build succeeds and
-   Android lint succeeds with warnings. Five host-side tests cover backup
-   encryption round trips, wrong passwords, modified ciphertext/IV, and
-   short-password rejection. Full backup restore, settings, camera
-   persistence/reordering, and paging still need regression coverage before
-   this branch is ready for review. Keep `camera.properties` and generated
-   APKs local.
-2. **Main-branch governance (#58):** enable protection against force-push and
-   deletion and require agreed PR checks. GitHub currently reports `main` as
-   unprotected. Review CI check names before changing repository settings.
-3. **Thermal investigation (#57):** the ASUS K012 reported elevated `skin1`
-   and chip temperatures during playback, and later readings fluctuated while
-   Camera Wall was stopped. The cause is undetermined. Playback has been
-   stopped; confirm device-specific limits and isolate charging, ambient
-   temperature, and stream load before resuming on-device tests.
-4. **Accessibility (#59):** the custom swipe and zoom touch handlers now call
-   accessibility click actions and Android lint no longer reports those
-   warnings. Verify navigation with TalkBack on the cooled K012 before closing.
-5. **Privacy hygiene (#63):** a local Wi-Fi ADB address was removed from the
-   current tracked device notes. Review repository history; do not rewrite
-   shared history without coordination.
-6. **Camera management defects (#60, #61, #62):** URL credential separation,
-   scan cancellation/no-address handling, and authenticated go2rtc connection
-   testing have local fixes. Host checks pass; verify the UI and network paths
-   on a safe device/test server before closing these issues.
-7. **Extended ASUS K012 test (#29):** run at least 30 minutes of playback,
-   reconnect, paging, fullscreen, reboot, and memory/CPU checks. The issue is
-   open; the earlier alpha checkpoint did not satisfy this extended test.
-8. **Orientation polish:** verify portrait/landscape behavior and determine
-   whether the rotated image comes from camera orientation, tablet mounting, or
-   an application transform. Do not rotate or alter the camera source until
-   the cause is established.
-9. **Server-side network hardening (#28):** authenticate/restrict Frigate and
-   go2rtc APIs and RTSP, rotate credentials, and verify firewall boundaries.
-   This requires a deployment plan and authorized access; it is not an app-only
-   change and is not started against the live network.
-10. **ARM physical-device validation:** validate the universal APK on an ARM
-   device. The available ASUS K012 is x86; no ARM device is currently available
-   for this checkpoint.
-11. **Release preparation:** after review and test gates pass, configure signing,
-   create a signed release, and attach checksums. Do not include local camera
-   configuration or credentials in source, artifacts, or release notes.
-12. **Optional polish:** finish settings propagation to every player option and
-   improve discovery-result import UX.
+The local feature branch and `origin/feature/modern-tablet-navigation` were at
+the same commit during this review. PR #64 is open as a draft; its latest GitHub
+build check passes. No tracked local changes were pending synchronization.
+Ignored camera configuration, APKs, device notes, and diagnostic dumps remain
+local by design.
 
-Do not schedule beta or stable work until items 1–4 are complete.
+1. **Finish PR #64 review gates.** Emulator UI tests pass in portrait and
+   landscape, including fixture-only reorder and synthetic video-fit checks.
+   On the K012, Settings/Camera List and search/reorder UI-only smoke tests
+   passed without starting playback. The app preference before/after integrity
+   check was not successfully established. Record that gap; do not claim device
+   persistence acceptance. Keep the PR draft until device gates below pass.
+2. **Establish a safe K012 test baseline (#57).** Keep the ADB cable for data,
+   remove external charging power, and verify the tablet reports no AC or USB
+   power input. Let the device cool and obtain applicable ASUS thermal guidance
+   before playback. Current telemetry showed AC input active, so the unpowered
+   condition is not yet verified. Do not use software battery-status overrides
+   as proof that charging stopped.
+3. **Run non-playback device acceptance.** After the power/cool-state gate,
+   check physical rotation, swipe paging, camera zoom, TalkBack, settings,
+   backup/restore, and upgrade preference preservation using disposable test
+   data. Keep screenshots local and redact all device and camera information.
+4. **Run playback and extended stability only after #57's safety gate (#29).**
+   Start with an observed short playback check and stop on abnormal heat or
+   unstable behavior. Proceed to the 30-minute reconnect, paging, fullscreen,
+   memory/CPU, and recovery checks only when device-specific limits and a safe
+   baseline are established. Reboot needs a maintenance window.
+5. **Validate the local camera/security fixes (#60, #61, #62).** Exercise URL
+   credential separation, scan cancellation/no-address handling, and
+   authenticated go2rtc testing against a disposable authenticated endpoint.
+   Never use or publish live camera credentials for test fixtures. Close issues
+   only with matching acceptance evidence.
+6. **Accessibility acceptance (#59).** Verify swipe and zoom navigation with
+   TalkBack on the K012; emulator and lint checks do not satisfy this device
+   criterion.
+7. **Privacy history cleanup (#63).** Current tracked files are clean, but a
+   prior private address remains in shared Git history. Plan any history rewrite
+   with affected collaborators first; do not rewrite shared history as part of
+   routine synchronization.
+8. **Server-side hardening (#28).** In an authorized maintenance plan, restrict
+   Frigate/go2rtc APIs and RTSP, configure dedicated credentials, rotate
+   upstream credentials, and verify firewall boundaries. This is separate
+   deployment work and must not be attempted against the live server without
+   explicit access and a rollback plan.
+9. **Main-branch governance (#58) and lint triage (#65).** Review the required
+   CI check names before enabling branch rules; address remaining lint warnings
+   separately from functional changes.
+10. **ARM physical-device validation.** Validate the universal APK on an ARM
+    device; the available K012 is x86.
+11. **Release preparation.** After review and device gates pass, configure
+    signing, create a signed release, and attach checksums. Keep camera settings
+    and credentials out of source, artifacts, and release notes.
+12. **Optional polish.** Complete settings propagation to every player option
+    and improve discovery-result import UX.
+
+Do not schedule beta or stable work until items 1–6 pass. Item 2 currently
+blocks physical playback; items 7–9 also require separate coordination or
+repository/deployment access.
 
 ## Target navigation
 

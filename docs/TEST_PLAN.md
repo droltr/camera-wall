@@ -73,10 +73,15 @@ screenshots or UI dumps to GitHub.
   embedded fallback camera list is empty. It is saved locally at
   `local-apks/Camera-Wall-v0.3.0-alpha.2-code8-ASUS-K012-Android-5.0-debug.apk`
   and remains ignored by Git. Minimum supported Android is 5.0 / API 21.
-- Emulator UI acceptance checks pass in portrait and landscape; physical tablet
-  screenshot, playback, and thermal checks remain pending. The K012 previously
-  felt unusually hot; do not resume playback until its cool/safe state is
-  confirmed and it is disconnected from AC power.
+- Emulator UI acceptance checks pass in portrait and landscape. On the physical
+  K012, Settings/Camera List and camera search/reorder UI-only smoke tests passed
+  without starting playback. A reliable before/after preference integrity
+  comparison was not established for that run, so device persistence acceptance
+  remains pending. Screenshots, playback, rotation, and thermal checks also
+  remain pending. The K012 previously reported high thermal readings; the most
+  recent power check showed AC input active. Do not resume playback until AC
+  power is disconnected, the device is cool, and applicable device thermal
+  guidance has been reviewed.
 - Exact local camera configuration values and private IPv4 literals were
   scanned across the current source tree; no matches remain. A previous private
   address was removed from the tracked stability note; shared Git history still
