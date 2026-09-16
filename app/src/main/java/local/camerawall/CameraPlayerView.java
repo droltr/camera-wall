@@ -24,6 +24,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
     private final Handler handler;
     private final SurfaceView surface;
     private final TextView status;
+    private final TextView nameTag;
     private String cameraName;
     private Uri cameraUri;
     private MediaPlayer player;
@@ -48,7 +49,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         this.activity = activity;
         this.libVLC = libVLC;
         this.handler = handler;
-        setBackgroundColor(Color.rgb(12, 12, 12));
+        setBackgroundColor(Ui.RAISED);
 
         surface = new SurfaceView(activity);
         addView(surface, new FrameLayout.LayoutParams(-1, -1));
@@ -58,20 +59,34 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         status.setTextColor(Color.WHITE);
         status.setTextSize(15);
         status.setGravity(Gravity.CENTER);
-        status.setBackgroundColor(0x66000000);
+        status.setBackgroundColor(0x990B1220);
         addView(status, new FrameLayout.LayoutParams(-1, -1));
+
+        nameTag = new TextView(activity);
+        nameTag.setTextColor(Ui.PRIMARY);
+        nameTag.setTextSize(12);
+        nameTag.setSingleLine(true);
+        nameTag.setPadding(Ui.dp(activity, 10), Ui.dp(activity, 6), Ui.dp(activity, 10), Ui.dp(activity, 6));
+        nameTag.setBackground(Ui.shape(0xCC111B2D, Ui.OUTLINE, Ui.dp(activity, 10)));
+        FrameLayout.LayoutParams tagParams = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
+        tagParams.setMargins(Ui.dp(activity, 8), Ui.dp(activity, 8), 0, 0);
+        addView(nameTag, tagParams);
     }
 
-    void bind(String name, Uri uri) {
+    void bind(String name, Uri uri, boolean showName) {
         stop();
         cameraName = name;
         cameraUri = uri;
         playing = false;
+        nameTag.setText(name == null ? "" : name);
+        nameTag.setVisibility(name == null || !showName ? GONE : VISIBLE);
         if (cameraUri == null) {
-            status.setText("");
+            status.setText("Kamera eklenmedi");
+            status.setTextColor(Ui.SECONDARY);
             status.setVisibility(VISIBLE);
             return;
         }
+        status.setTextColor(Ui.PRIMARY);
         showConnecting();
         connectSoon(100);
         handler.removeCallbacks(healthCheck);
@@ -118,7 +133,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
     }
 
     private void showConnecting() {
-        status.setText(cameraName + "\nConnecting…");
+        status.setText("Bağlanıyor…");
         status.setVisibility(VISIBLE);
     }
 
@@ -126,7 +141,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         if (cameraUri == null) return;
         stopPlayerOnly();
         status.setVisibility(VISIBLE);
-        status.setText(cameraName + "\nNo connection — retrying");
+        status.setText("Bağlantı yok · yeniden deneniyor");
         connectSoon(RECONNECT_INTERVAL_MS);
     }
 

@@ -5,8 +5,9 @@ plugins { id 'com.android.application' }
 def cameraConfigFile = rootProject.file('camera.properties')
 def cameraExampleFile = rootProject.file('camera.properties.example')
 def cameraConfig = new Properties()
-def selectedCameraConfig = cameraConfigFile.exists() ? cameraConfigFile : cameraExampleFile
-if (selectedCameraConfig.exists()) {
+def publicRelease = providers.gradleProperty('publicRelease').map { it.toBoolean() }.getOrElse(false)
+def selectedCameraConfig = publicRelease ? null : (cameraConfigFile.exists() ? cameraConfigFile : cameraExampleFile)
+if (selectedCameraConfig != null && selectedCameraConfig.exists()) {
     selectedCameraConfig.withInputStream { cameraConfig.load(it) }
 }
 
@@ -27,12 +28,12 @@ def resolvedVersionCode = System.getenv('GITHUB_RUN_NUMBER')?.isInteger() ? Syst
 
 android {
     namespace 'local.camerawall'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId 'local.camerawall'
         minSdk 21
-        targetSdk 28
+        targetSdk 36
         versionCode resolvedVersionCode
         versionName resolvedVersionName
         // Preserve the ASUS K012 x86 path while supporting ARM devices.
@@ -60,5 +61,5 @@ android {
 }
 
 dependencies {
-    implementation 'org.videolan.android:libvlc-all:3.5.1'
+    implementation 'org.videolan.android:libvlc-all:3.7.0'
 }

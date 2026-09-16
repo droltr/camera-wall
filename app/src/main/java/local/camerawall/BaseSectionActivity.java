@@ -20,7 +20,7 @@ abstract class BaseSectionActivity extends Activity implements BottomNavigationB
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.BLACK);
+        root.setBackgroundColor(Ui.BACKGROUND);
 
         root.addView(createContentView(), new LinearLayout.LayoutParams(-1, 0, 1f));
 
