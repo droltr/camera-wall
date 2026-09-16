@@ -1,7 +1,7 @@
 # ASUS K012 Alpha Stability Test
 
 This is the pre-beta verification record for the Android 5 ASUS MeMO Pad 7
-K012 (`192.168.40.148`, Wi-Fi ADB). Beta and stable releases remain deferred.
+K012 (Wi-Fi ADB). Beta and stable releases remain deferred.
 
 ## Automated and real-device checks
 

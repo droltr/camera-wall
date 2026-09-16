@@ -21,12 +21,14 @@ abstract class BaseSectionActivity extends Activity implements BottomNavigationB
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Ui.BACKGROUND);
+        root.setFocusableInTouchMode(true);
+        root.requestFocus();
 
         root.addView(createContentView(), new LinearLayout.LayoutParams(-1, 0, 1f));
 
         BottomNavigationBar navigation = new BottomNavigationBar(this, destination());
         navigation.setListener(this);
-        root.addView(navigation, new LinearLayout.LayoutParams(-1, dp(52)));
+        root.addView(navigation, new LinearLayout.LayoutParams(-1, dp(BottomNavigationBar.HEIGHT_DP)));
         setContentView(root);
     }
 

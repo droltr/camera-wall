@@ -34,6 +34,7 @@ android {
         applicationId 'local.camerawall'
         minSdk 21
         targetSdk 36
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         versionCode resolvedVersionCode
         versionName resolvedVersionName
         // Preserve the ASUS K012 x86 path while supporting ARM devices.
@@ -62,4 +63,7 @@ android {
 
 dependencies {
     implementation 'org.videolan.android:libvlc-all:3.7.0'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    testImplementation 'junit:junit:4.13.2'
 }

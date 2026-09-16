@@ -1,12 +1,5 @@
 <resources>
     <color name="app_background">#0B1220</color>
-    <color name="surface">#111B2D</color>
     <color name="surface_raised">#18263A</color>
-    <color name="surface_selected">#1E3A43</color>
-    <color name="outline">#2B3C52</color>
-    <color name="text_primary">#F4F7FB</color>
-    <color name="text_secondary">#9BACBF</color>
     <color name="accent">#54E2C0</color>
-    <color name="accent_blue">#63B9FF</color>
-    <color name="danger">#FF7A86</color>
 </resources>

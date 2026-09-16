@@ -1,10 +1,14 @@
 package local.camerawall;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
 import android.view.Gravity;
+import android.view.GestureDetector;
+import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -22,7 +26,8 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
     private final Activity activity;
     private final LibVLC libVLC;
     private final Handler handler;
-    private final SurfaceView surface;
+    private final AppSettings appSettings;
+    private final AccessibleSurfaceView surface;
     private final TextView status;
     private final TextView nameTag;
     private String cameraName;
@@ -30,6 +35,15 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
     private MediaPlayer player;
     private boolean playing;
     private long connectStartedAt;
+    private boolean zoomEnabled;
+    private float zoom = 1f;
+    private ScaleGestureDetector scaleGestureDetector;
+    private GestureDetector gestureDetector;
+    private ZoomListener zoomListener;
+
+    interface ZoomListener {
+        void onZoomChanged(float value);
+    }
     private final Runnable healthCheck = new Runnable() {
         @Override public void run() {
             if (cameraUri == null) return;
@@ -44,14 +58,15 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         @Override public void run() { connect(); }
     };
 
-    CameraPlayerView(Activity activity, LibVLC libVLC, Handler handler) {
+    CameraPlayerView(Activity activity, LibVLC libVLC, Handler handler, AppSettings appSettings) {
         super(activity);
         this.activity = activity;
         this.libVLC = libVLC;
         this.handler = handler;
+        this.appSettings = appSettings;
         setBackgroundColor(Ui.RAISED);
 
-        surface = new SurfaceView(activity);
+        surface = new AccessibleSurfaceView(activity);
         addView(surface, new FrameLayout.LayoutParams(-1, -1));
         surface.getHolder().addCallback(this);
 
@@ -68,7 +83,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         nameTag.setSingleLine(true);
         nameTag.setPadding(Ui.dp(activity, 10), Ui.dp(activity, 6), Ui.dp(activity, 10), Ui.dp(activity, 6));
         nameTag.setBackground(Ui.shape(0xCC111B2D, Ui.OUTLINE, Ui.dp(activity, 10)));
-        FrameLayout.LayoutParams tagParams = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.LEFT);
+        FrameLayout.LayoutParams tagParams = new FrameLayout.LayoutParams(-2, -2, Gravity.TOP | Gravity.START);
         tagParams.setMargins(Ui.dp(activity, 8), Ui.dp(activity, 8), 0, 0);
         addView(nameTag, tagParams);
     }
@@ -91,6 +106,70 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         connectSoon(100);
         handler.removeCallbacks(healthCheck);
         handler.postDelayed(healthCheck, 5000);
+    }
+
+    void setZoomEnabled(boolean enabled, ZoomListener listener) {
+        zoomEnabled = enabled;
+        zoomListener = listener;
+        if (!enabled) {
+            surface.setOnTouchListener(null);
+            return;
+        }
+        scaleGestureDetector = new ScaleGestureDetector(activity,
+            new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                @Override public boolean onScale(ScaleGestureDetector detector) {
+                    setZoom(zoom * detector.getScaleFactor());
+                    return true;
+                }
+            });
+        gestureDetector = new GestureDetector(activity, new GestureDetector.SimpleOnGestureListener() {
+            @Override public boolean onDown(MotionEvent event) { return true; }
+            @Override public boolean onDoubleTap(MotionEvent event) {
+                setZoom(zoom > 1.05f ? 1f : 2f);
+                return true;
+            }
+        });
+        surface.setOnTouchListener((view, event) -> {
+            scaleGestureDetector.onTouchEvent(event);
+            gestureDetector.onTouchEvent(event);
+            if (event.getActionMasked() == MotionEvent.ACTION_UP) view.performClick();
+            return true;
+        });
+    }
+
+    void zoomIn() { setZoom(zoom * 1.25f); }
+    void zoomOut() { setZoom(zoom / 1.25f); }
+    void resetZoom() { setZoom(1f); }
+    float zoomFactor() { return zoom; }
+
+    void restoreZoom(float value) { setZoom(value); }
+
+    private void setZoom(float value) {
+        zoom = Math.max(1f, Math.min(4f, value));
+        if (player != null && playing) applyVideoScale();
+        if (zoomListener != null) zoomListener.onZoomChanged(zoom);
+    }
+
+    private void applyVideoScale() {
+        if (player == null) return;
+        if (zoom <= 1.01f) {
+            // LibVLC scale 0 auto-fits to the SurfaceView window. A null aspect
+            // ratio keeps the stream's native ratio, so the full image remains
+            // visible without stretching or cropping.
+            player.setAspectRatio(null);
+            player.setScale(0f);
+        } else {
+            player.setScale(zoom);
+        }
+    }
+
+    private static final class AccessibleSurfaceView extends SurfaceView {
+        AccessibleSurfaceView(Context context) { super(context); }
+
+        @Override public boolean performClick() {
+            super.performClick();
+            return true;
+        }
     }
 
     void stop() {
@@ -120,13 +199,12 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         }
 
         Media media = new Media(libVLC, cameraUri);
-        media.addOption(":rtsp-tcp");
+        if (appSettings.rtspTcp()) media.addOption(":rtsp-tcp");
         media.addOption(":no-audio");
-        media.addOption(":network-caching=800");
+        media.addOption(":network-caching=" + appSettings.networkCacheMs());
         player.setMedia(media);
         media.release();
-        player.setAspectRatio(null);
-        player.setScale(0);
+        applyVideoScale();
         player.play();
         handler.removeCallbacks(healthCheck);
         handler.postDelayed(healthCheck, 5000);
@@ -167,8 +245,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
             @Override public void run() {
                 if (event.type == MediaPlayer.Event.Playing && player != null) {
                     playing = true;
-                    player.setAspectRatio(null);
-                    player.setScale(0);
+                    applyVideoScale();
                     status.setVisibility(View.GONE);
                 } else if (event.type == MediaPlayer.Event.EncounteredError
                     || event.type == MediaPlayer.Event.EndReached) {
