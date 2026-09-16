@@ -43,7 +43,7 @@ public final class SingleCameraActivity extends Activity {
         options.add("--no-audio");
         options.add("--rtsp-tcp");
         options.add("--network-caching=800");
-        options.add("--avcodec-hw=any");
+        options.add("--avcodec-hw=none");
         libVLC = new LibVLC(this, options);
 
         FrameLayout root = new FrameLayout(this);
@@ -59,11 +59,11 @@ public final class SingleCameraActivity extends Activity {
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setPadding(dp(8), 0, dp(16), 0);
-        header.setBackgroundColor(0x99000000);
+        header.setBackgroundColor(0xE6111B2D);
 
         TextView back = new TextView(this);
         back.setText("‹  Geri");
-        back.setTextColor(Color.WHITE);
+        back.setTextColor(Ui.ACCENT);
         back.setTextSize(18);
         back.setGravity(Gravity.CENTER);
         back.setContentDescription("Kamera duvarına geri dön");
@@ -74,7 +74,7 @@ public final class SingleCameraActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText(camera.name);
-        title.setTextColor(Color.WHITE);
+        title.setTextColor(Ui.PRIMARY);
         title.setTextSize(18);
         title.setGravity(Gravity.CENTER_VERTICAL);
         header.addView(title, new LinearLayout.LayoutParams(0, -1, 1f));
@@ -109,7 +109,10 @@ public final class SingleCameraActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
-        if (playerView != null) playerView.bind(camera.name, camera.playbackUri());
+        if (playerView != null) {
+            AppSettings settings = new AppSettings(this);
+            playerView.bind(camera.name, camera.playbackUri(settings.go2rtcUrl()), false);
+        }
     }
 
     @Override protected void onPause() {

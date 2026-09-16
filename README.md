@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Android 5.0+](https://img.shields.io/badge/Android-5.0%2B-green.svg)](https://developer.android.com/about/versions/lollipop)
 
+The app targets Android 16 (API 36) and remains installable on Android 5.0 (API 21) and newer devices.
+
 A minimal Android app that turns an old x86 tablet into a dedicated RTSP
 camera monitor. It was built for an ASUS MeMO Pad 7 K012 running Android 5.0.
 
@@ -114,20 +116,19 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 Tags matching `v*` trigger the release workflow. It builds a signed universal
 APK containing x86 and ARM ABIs,
 generates a SHA-256 checksum, and attaches both files to a GitHub Release.
-The project is currently in alpha; use tags such as `v0.1.0-alpha.1`. Alpha
+The project is currently in alpha; use tags such as `v0.3.0-alpha.2`. Alpha
 tags are automatically marked as pre-releases on GitHub. Beta and stable
-versions are intentionally deferred until the application matures.
-Configure these repository secrets first:
+versions are intentionally deferred until the application matures. Published
+APKs contain no camera configuration; add cameras on the device after
+installation. Configure these repository secrets before publishing:
 
-- `CAMERA_CONFIG_BASE64`
 - `ANDROID_KEYSTORE_BASE64`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_ALIAS`
 - `ANDROID_KEY_PASSWORD`
 
-Encode `camera.properties` and the keystore with
-`base64 -w 0 camera.properties` and `base64 -w 0 release.keystore`. Never
-commit camera credentials, the keystore, or signing passwords.
+Encode the keystore with `base64 -w 0 release.keystore`. Never commit camera
+credentials, the keystore, or signing passwords.
 
 ## Contributing
 

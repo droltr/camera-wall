@@ -36,8 +36,25 @@ final class CameraSpec {
         return value;
     }
 
-    Uri playbackUri() {
-        Uri endpoint = Uri.parse(url);
+    Uri playbackUri(String go2rtcUrl) {
+        String playbackUrl = url;
+        // Use the locally configured go2rtc host for Hikvision restreams.
+        // Camera/NVR addresses and credentials stay in local app data.
+        if (playbackUrl.contains("/Streaming/Channels/") && go2rtcUrl != null && go2rtcUrl.length() > 0) {
+            String path = Uri.parse(playbackUrl).getLastPathSegment();
+            if (path != null && path.matches("[1-4]0[12]")) {
+                Uri server = Uri.parse(go2rtcUrl);
+                if (server.getHost() != null) {
+                    return Uri.parse("rtsp://" + server.getHost() + ":8554/hik" + path.charAt(0) + "_tablet");
+                }
+            }
+        }
+        // The K012's old H.264 decoder is unreliable with the NVR's 960x1080
+        // main stream. Use the recorder's low-bandwidth substream for playback.
+        if (playbackUrl.contains("/Streaming/Channels/") && playbackUrl.endsWith("01")) {
+            playbackUrl = playbackUrl.substring(0, playbackUrl.length() - 2) + "02";
+        }
+        Uri endpoint = Uri.parse(playbackUrl);
         if (username.length() == 0) return endpoint;
 
         String authority = endpoint.getEncodedAuthority();
