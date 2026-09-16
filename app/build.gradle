@@ -5,35 +5,39 @@ plugins { id 'com.android.application' }
 def cameraConfigFile = rootProject.file('camera.properties')
 def cameraExampleFile = rootProject.file('camera.properties.example')
 def cameraConfig = new Properties()
-def selectedCameraConfig = cameraConfigFile.exists() ? cameraConfigFile : cameraExampleFile
-if (selectedCameraConfig.exists()) {
+def publicRelease = providers.gradleProperty('publicRelease').map { it.toBoolean() }.getOrElse(false)
+def selectedCameraConfig = publicRelease ? null : (cameraConfigFile.exists() ? cameraConfigFile : cameraExampleFile)
+if (selectedCameraConfig != null && selectedCameraConfig.exists()) {
     selectedCameraConfig.withInputStream { cameraConfig.load(it) }
 }
 
 def configuredCameras = []
 for (int index = 1; cameraConfig.getProperty("camera.${index}.url") != null; index++) {
     configuredCameras << [
-        name: cameraConfig.getProperty("camera.${index}.name", "CAMERA ${index}"),
-        url : cameraConfig.getProperty("camera.${index}.url")
+        name    : cameraConfig.getProperty("camera.${index}.name", "CAMERA ${index}"),
+        url     : cameraConfig.getProperty("camera.${index}.url"),
+        username: cameraConfig.getProperty("camera.${index}.username", ""),
+        password: cameraConfig.getProperty("camera.${index}.password", "")
     ]
 }
 def camerasJson = JsonOutput.toJson(configuredCameras)
 def quotedCamerasJson = JsonOutput.toJson(camerasJson)
 def releaseTag = System.getenv('GITHUB_REF_NAME')
-def resolvedVersionName = releaseTag?.matches('v[0-9]+\\.[0-9]+\\.[0-9]+') ? releaseTag.substring(1) : '1.0.0'
-def resolvedVersionCode = System.getenv('GITHUB_RUN_NUMBER')?.isInteger() ? System.getenv('GITHUB_RUN_NUMBER').toInteger() : 1
+def resolvedVersionName = releaseTag?.matches('v[0-9]+\\.[0-9]+\\.[0-9]+(-[0-9A-Za-z.-]+)?') ? releaseTag.substring(1) : '0.3.0-alpha.1'
+def resolvedVersionCode = System.getenv('GITHUB_RUN_NUMBER')?.isInteger() ? System.getenv('GITHUB_RUN_NUMBER').toInteger() : 3
 
 android {
     namespace 'local.camerawall'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId 'local.camerawall'
         minSdk 21
-        targetSdk 28
+        targetSdk 36
         versionCode resolvedVersionCode
         versionName resolvedVersionName
-        ndk { abiFilters 'x86' }
+        // Preserve the ASUS K012 x86 path while supporting ARM devices.
+        ndk { abiFilters 'x86', 'armeabi-v7a', 'arm64-v8a' }
         buildConfigField 'String', 'CAMERAS_JSON', quotedCamerasJson
     }
     buildFeatures { buildConfig true }
@@ -57,5 +61,5 @@ android {
 }
 
 dependencies {
-    implementation 'org.videolan.android:libvlc-all:3.5.1'
+    implementation 'org.videolan.android:libvlc-all:3.7.0'
 }

@@ -5,8 +5,41 @@ Notable changes are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.3.0-alpha.2] - 2026-09-16
+
 ### Added
 
+- Switchable 4-camera and 8-camera wall layouts with saved preference
+- Hikvision channel restream routing through the locally configured go2rtc host
+- New Camera Wall logo and refreshed camera, navigation, and settings screens
+
+### Changed
+
+- Use Hikvision low-bandwidth substreams and software decoding for older tablets
+- Keep local camera configuration and device session notes out of GitHub releases
+- Target Android 16 (API 36) while retaining Android 5.0 (API 21) support
+- Upgrade LibVLC to 3.7.0 for current native playback support
+
+## [0.3.0-alpha.1] - 2026-09-14
+
+### Added
+
+- Persisted application and go2rtc server settings with masked credentials
+- go2rtc stream import, ONVIF discovery, bounded local RTSP scanning, and launcher icon
+- ASUS K012 alpha stability smoke-test record
+
+## [0.2.0-alpha.1] - 2026-09-14
+
+### Added
+
+- Reusable libVLC camera player shared by wall and fullscreen views
+- Private ordered camera repository seeded from the build configuration
+- Compact Home, Cameras, and Settings bottom navigation
+- Tap-to-fullscreen single-camera view with visible and system Back support
+- Optional per-camera RTSP username and password fields for future server hardening
+- Security risk register for the current trusted-LAN deployment
+- Staged roadmap for navigation, camera management, discovery, and device-safe delivery
+- Public development-status table and Issue-to-release workflow documentation
 - Build-time camera configuration through an ignored local properties file
 - Android CI and signed GitHub Release workflows
 - Dependabot configuration, contribution guide, and issue templates
@@ -14,13 +47,16 @@ Notable changes are documented here. This project follows
 
 ### Changed
 
-- Documentation now accurately states the three-second page interval and x86-only ABI
+- Documentation now accurately states the three-second page interval and x86/ARM ABI support
 
-## [1.0.0] - 2026-09-13
+## [0.1.0-alpha.1] - 2026-09-13
 
 ### Added
 
 - Initial 2x2 RTSP camera wall application
 
-[Unreleased]: https://github.com/droltr/camera-wall/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/droltr/camera-wall/releases/tag/v1.0.0
+[Unreleased]: https://github.com/droltr/camera-wall/compare/v0.3.0-alpha.2...HEAD
+[0.3.0-alpha.2]: https://github.com/droltr/camera-wall/compare/v0.3.0-alpha.1...v0.3.0-alpha.2
+[0.3.0-alpha.1]: https://github.com/droltr/camera-wall/compare/v0.2.0-alpha.1...v0.3.0-alpha.1
+[0.2.0-alpha.1]: https://github.com/droltr/camera-wall/compare/v0.1.0-alpha.1...v0.2.0-alpha.1
+[0.1.0-alpha.1]: https://github.com/droltr/camera-wall/releases/tag/v0.1.0-alpha.1
