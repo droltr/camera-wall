@@ -212,8 +212,9 @@ screenshots or UI dumps to GitHub.
   completed with a usable unicast IPv4 address. Missing, loopback, link-local,
   and multicast addresses are rejected. UI-queued candidate and completion
   callbacks are ignored after scan cancellation or activity destruction. Unit
-  tests cover the IPv4 eligibility rules. Physical discovery on the K012 remains
-  pending, so the issue stays open until that acceptance check passes.
+  tests cover the IPv4 eligibility rules. Physical K012 discovery and
+  cancellation checks passed; the existing app preference snapshot remained
+  unchanged. Issue #61 is closed.
 - Issue #65: The remaining lint warnings were reviewed. `SetTextI18n` is
   expected while the app is Turkish-only; full resource extraction belongs to
   future localization work. `fullSensor` orientation is intentional for the
@@ -223,3 +224,24 @@ screenshots or UI dumps to GitHub.
   for older Android compatibility. Keep these warnings visible in lint instead
   of suppressing them. Issue #65 is closed as triaged; the warning count remains
   38 with zero lint errors.
+
+### ASUS K012 issue follow-up — 2026-09-16
+
+- Updated the installed public-config APK in place to version `0.3.0-alpha.3`,
+  versionCode 10, with the RTSP scanner fix. The local APK is saved under
+  ignored `local-apks/`; the combined app-preference snapshot was identical
+  before and after installation.
+- Physical RTSP scan on the connected Wi-Fi completed and showed candidates.
+  The picker was dismissed without saving. A second scan was canceled with
+  Back; after waiting beyond the scan window, no stale result picker appeared.
+  No saved camera or settings changed. Issue #61 is closed.
+- A separate live-view observation ended early: the process was present through
+  the 17-minute sample and absent at the 18-minute sample. The ActivityManager
+  log buffer recorded a stop/process-death event but no Java exception or native
+  fatal-signal marker; the initiating cause could not be established. PSS ranged
+  from about 19 to 89 MB and sampled app CPU from 41% to 64%; there is no
+  device-specific acceptance threshold. Battery readings ranged from 29.1°C to
+  29.6°C. Other thermal-zone files were unreadable during this session.
+- Issue #29 remains open: this did not complete a 30-minute run, network
+  reconnect, repeated boot-launch, or reboot observation. Issue #57 remains
+  open because component thermal limits and sensor access are still unavailable.
