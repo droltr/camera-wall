@@ -36,6 +36,7 @@ public final class CameraListActivity extends BaseSectionActivity {
     private MediaPlayer testPlayer;
     private LibVLC testLibVLC;
     private RtspScanner scanner;
+    private int scanGeneration;
     private final ArrayList<CameraSpec> allCameras = new ArrayList<>();
     private LinearLayout cameraRows;
     private TextView cameraSummary;
@@ -168,9 +169,10 @@ public final class CameraListActivity extends BaseSectionActivity {
             return;
         }
         final ArrayList<String> results = new ArrayList<>();
-        scanner = new RtspScanner(this, new RtspScanner.Listener() { @Override public void onCandidate(final String host, final int port) { runOnUiThread(() -> results.add("rtsp://" + host + ":" + port)); }
+        final int scanId = ++scanGeneration;
+        scanner = new RtspScanner(this, new RtspScanner.Listener() { @Override public void onCandidate(final String host, final int port) { runOnUiThread(() -> { if (isScanActive(scanId)) results.add("rtsp://" + host + ":" + port); }); }
             @Override public void onFinished() { runOnUiThread(() -> {
-                if (scanner == null || isFinishing() || isDestroyed()) return;
+                if (!isScanActive(scanId)) return;
                 scanner = null;
                 ArrayList<CameraSpec> candidates = new ArrayList<>();
                 for (String result : results) {
@@ -181,6 +183,11 @@ public final class CameraListActivity extends BaseSectionActivity {
                 showCandidatePicker("RTSP tarama sonuçları", candidates, false);
             }); }});
         Toast.makeText(this, "Tarama başladı; durdurmak için geri dönün", Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean isScanActive(int scanId) {
+        return scanGeneration == scanId && scanner != null && !scanner.isStopped()
+            && !isFinishing() && !isDestroyed();
     }
 
     private void showCandidatePicker(String title, final ArrayList<CameraSpec> candidates, boolean onvif) {
@@ -491,7 +498,7 @@ public final class CameraListActivity extends BaseSectionActivity {
         if (testLibVLC != null) { testLibVLC.release(); testLibVLC = null; }
     }
 
-    @Override protected void onDestroy() { if (scanner != null) { scanner.stop(); scanner = null; } stopTestPlayer(); super.onDestroy(); }
+    @Override protected void onDestroy() { scanGeneration++; if (scanner != null) { scanner.stop(); scanner = null; } stopTestPlayer(); super.onDestroy(); }
 
     private LinearLayout.LayoutParams rowLayoutParams() {
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);

@@ -205,3 +205,21 @@ screenshots or UI dumps to GitHub.
 - Device screenshots and UI dumps were kept in a private temporary directory
   and were not attached to GitHub. Camera names, URLs, private addresses,
   usernames, passwords, and device serials are intentionally omitted here.
+
+### Issue triage — 2026-09-16
+
+- Issue #61: RTSP scanning now requires Wi-Fi to be enabled, associated, and
+  completed with a usable unicast IPv4 address. Missing, loopback, link-local,
+  and multicast addresses are rejected. UI-queued candidate and completion
+  callbacks are ignored after scan cancellation or activity destruction. Unit
+  tests cover the IPv4 eligibility rules. Physical discovery on the K012 remains
+  pending, so the issue stays open until that acceptance check passes.
+- Issue #65: The remaining lint warnings were reviewed. `SetTextI18n` is
+  expected while the app is Turkish-only; full resource extraction belongs to
+  future localization work. `fullSensor` orientation is intentional for the
+  tablet wall. Custom views are created only in code. Cleartext HTTP remains
+  required for local camera/NVR endpoints on supported API levels, and backup
+  is explicitly disabled; the deprecated backup attribute remains necessary
+  for older Android compatibility. Keep these warnings visible in lint instead
+  of suppressing them. Issue #65 is closed as triaged; the warning count remains
+  38 with zero lint errors.
