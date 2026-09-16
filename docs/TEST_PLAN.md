@@ -122,4 +122,4 @@ screenshots or UI dumps to GitHub.
   23+ only, harmless below minSdk 21), `DataExtractionRules` 1 (deprecated
   `allowBackup` attribute; app already ships `allowBackup="false"`).
 - Remaining categories are tracked for later triage rather than fixed here;
-  see the linked GitHub issue.
+  see issue #65.
