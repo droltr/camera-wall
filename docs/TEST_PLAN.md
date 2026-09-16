@@ -64,7 +64,7 @@ screenshots or UI dumps to GitHub.
 - Never include camera credentials, local addresses, usernames, serials, or raw
   private screenshots in issues, PRs, commits, or release artifacts.
 
-## Current verification record — 2026-09-16
+## Earlier verification record — 2026-09-16 (superseded by later entries)
 
 - `assembleDebug`, `testDebugUnitTest`, and `lintDebug` pass; 8 unit tests pass.
 - Lint reports 38 warnings, mainly remaining localization and deprecated API,
@@ -169,3 +169,39 @@ screenshots or UI dumps to GitHub.
   `allowBackup` attribute; app already ships `allowBackup="false"`).
 - Remaining categories are tracked for later triage rather than fixed here;
   see issue #65.
+
+### K012 camera-sync and playback follow-up — 2026-09-16
+
+- Built public-config APK `0.3.0-alpha.3` / versionCode 10 and kept it in the
+  git-ignored `local-apks/` directory. No camera values or credentials were
+  embedded in the APK.
+- On the ASUS K012 running Android 5.0, all 5 instrumentation tests passed;
+  the 12 unit tests passed, lint completed with 38 warnings, and GitHub's
+  `build` check passed. The test APK's connected instrumentation cleanup
+  removed the target app package; the public APK was then reinstalled and the
+  camera list was re-synchronized. Do not run connected instrumentation tests
+  on this tablet without an explicit restore plan.
+- The go2rtc API returned 10 producer-backed stream entries. Alias resolution
+  selected 9 unique cameras; the tablet's saved names matched that canonical
+  list, and synchronized records contain no per-camera username or password.
+  The API was reachable without authentication from the tablet's local Wi-Fi;
+  no server or network settings were changed. See #28.
+- A brief 2x2 live-view check showed frames in all four visible camera tiles.
+  In single-camera view the plus and reset controls responded. With automatic
+  paging temporarily off, left and right swipes moved between pages; automatic
+  paging was restored afterward. The known settings were restored to 4 cameras,
+  automatic paging, 5 seconds, 800 ms buffer, RTSP TCP, labels, and keep-screen-on.
+- The battery sensor read 29.7°C during the brief playback check. This is not a
+  thermal limit or a component-temperature measurement; the 30-minute thermal
+  and reconnect run remains pending. The owner confirmed cooling and authorized
+  tests to continue; no device-specific ASUS thermal guidance was verified.
+- An ADB rotation override did not change the tablet's reported display
+  orientation; the original system rotation settings were restored. Physical
+  accelerometer rotation, pinch/double-tap zoom, TalkBack, backup restore, and
+  long-duration/reboot stability remain unverified.
+- Settings connection-test authentication was verified on-device with a
+  disposable Basic Auth endpoint and temporary credentials; the test values
+  were cleared and the original endpoint was restored. Issue #62 was closed.
+- Device screenshots and UI dumps were kept in a private temporary directory
+  and were not attached to GitHub. Camera names, URLs, private addresses,
+  usernames, passwords, and device serials are intentionally omitted here.
