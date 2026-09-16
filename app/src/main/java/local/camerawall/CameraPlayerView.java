@@ -146,8 +146,21 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
 
     private void setZoom(float value) {
         zoom = Math.max(1f, Math.min(4f, value));
-        if (player != null && playing) player.setScale(zoom <= 1.01f ? 0f : zoom);
+        if (player != null && playing) applyVideoScale();
         if (zoomListener != null) zoomListener.onZoomChanged(zoom);
+    }
+
+    private void applyVideoScale() {
+        if (player == null) return;
+        if (zoom <= 1.01f) {
+            // LibVLC scale 0 auto-fits to the SurfaceView window. A null aspect
+            // ratio keeps the stream's native ratio, so the full image remains
+            // visible without stretching or cropping.
+            player.setAspectRatio(null);
+            player.setScale(0f);
+        } else {
+            player.setScale(zoom);
+        }
     }
 
     private static final class AccessibleSurfaceView extends SurfaceView {
@@ -191,8 +204,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
         media.addOption(":network-caching=" + appSettings.networkCacheMs());
         player.setMedia(media);
         media.release();
-        player.setAspectRatio(null);
-        player.setScale(zoom <= 1.01f ? 0f : zoom);
+        applyVideoScale();
         player.play();
         handler.removeCallbacks(healthCheck);
         handler.postDelayed(healthCheck, 5000);
@@ -233,8 +245,7 @@ final class CameraPlayerView extends FrameLayout implements MediaPlayer.EventLis
             @Override public void run() {
                 if (event.type == MediaPlayer.Event.Playing && player != null) {
                     playing = true;
-                    player.setAspectRatio(null);
-                    player.setScale(zoom <= 1.01f ? 0f : zoom);
+                    applyVideoScale();
                     status.setVisibility(View.GONE);
                 } else if (event.type == MediaPlayer.Event.EncounteredError
                     || event.type == MediaPlayer.Event.EndReached) {

@@ -67,16 +67,16 @@ screenshots or UI dumps to GitHub.
 ## Current verification record — 2026-09-16
 
 - `assembleDebug`, `testDebugUnitTest`, and `lintDebug` pass; 8 unit tests pass.
-- Lint reports 49 warnings, mainly existing localization, deprecated API, and
+- Lint reports 38 warnings, mainly remaining localization and deprecated API,
   manifest checks; review the generated lint report before a stable release.
 - A debug APK was built with public-release camera configuration, so its
   embedded fallback camera list is empty. It is saved locally at
   `local-apks/Camera-Wall-v0.3.0-alpha.2-code8-ASUS-K012-Android-5.0-debug.apk`
   and remains ignored by Git. Minimum supported Android is 5.0 / API 21.
-- Device screenshots and UI acceptance checks are pending. The K012 previously
-  felt unusually hot; playback remains stopped and the device is still connected
-  to AC power. Do not resume device testing until the owner confirms it is cool
-  and safe to use.
+- Emulator UI acceptance checks pass in portrait and landscape; physical tablet
+  screenshot, playback, and thermal checks remain pending. The K012 previously
+  felt unusually hot; do not resume playback until its cool/safe state is
+  confirmed and it is disconnected from AC power.
 - Exact local camera configuration values and private IPv4 literals were
   scanned across the current source tree; no matches remain. A previous private
   address was removed from the tracked stability note; shared Git history still
@@ -101,6 +101,44 @@ screenshots or UI dumps to GitHub.
 - A first attempt at 13:00–13:00 (JDK 21 from Homebrew, no `ANDROID_HOME`) failed
   fast with "SDK location not found"; re-run above used the project's local
   toolchain instead and succeeded.
+
+### Android emulator UI run — 2026-09-16
+
+- Provisioned a local-only Android 15 / API 35 x86_64 AVD under the ignored
+  `.toolchain` directory. Emulator Vulkan crashed on this host; it runs with
+  SwiftShader ANGLE and Vulkan disabled.
+- `connectedDebugAndroidTest`: 3/3 tests passed in portrait, then 3/3 passed in
+  a landscape logical-display configuration. Tests cover settings/camera-list
+  layout and selectors, search and reorder persistence using non-routable
+  `.invalid` fixtures, and Home → Cameras → Settings navigation with an empty
+  public camera list. No camera streams or real credentials were used.
+- Landscape was induced with the emulator's logical display size override
+  (`1920x1080`); this verifies responsive layout but does not verify physical
+  accelerometer rotation. The ASUS K012's orientation behavior remains a
+  separate hardware check.
+- A clean test build initially hit the default Gradle heap limit while
+  packaging libVLC; increasing the local Gradle heap resolved it. A separate
+  test attempt was rejected because the AVD had code 8 while Gradle defaulted
+  to code 3; rerunning with the matching alpha.2 version code passed.
+- Current AVD UI tests run only on this host. Screenshots and test data remain
+  local; do not attach device screenshots or camera data to GitHub.
+
+### Final automated run — 2026-09-16
+
+- `clean assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug`:
+  `BUILD SUCCESSFUL`; unit tests 8/8 passed; Android test APK built; lint has
+  0 errors and 38 warnings.
+- `connectedDebugAndroidTest` on the Android 15 AVD: 3/3 passed in portrait
+  and 3/3 passed with a 1920x1080 landscape logical display. Coverage includes
+  Home/Cameras/Settings navigation, empty public-build behavior, camera search,
+  fixture-only reorder persistence, and settings/camera-list layout.
+- Saved the rebuilt public-configuration Android 5+ debug APK at the local,
+  gitignored path noted above. `BuildConfig.CAMERAS_JSON` is `[]`; no local
+  camera values are included.
+- Video scaling is explicit in `CameraPlayerView`: at 1×, LibVLC uses automatic
+  output-window scaling with the stream's original aspect ratio; user zoom may
+  crop by design. No live or synthetic decoded video was used in this run, so
+  visual stream fit still needs a safe stream/device acceptance check.
 
 ### Lint fix-up and re-verification — 2026-09-16 13:41:27–13:41:37 +03:00
 
