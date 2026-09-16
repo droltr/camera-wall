@@ -2,6 +2,7 @@ package local.camerawall;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.net.Uri;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Environment;
@@ -11,6 +12,7 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.view.SurfaceView;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -24,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Opens data-management screens directly, without starting camera playback. */
@@ -60,6 +64,64 @@ public final class TabletUiSmokeTest {
                 }
             });
             instrumentation.waitForIdleSync();
+        }
+    }
+
+    @Test public void testVideoFitsTileWithOriginalAspectRatio() throws Throwable {
+        final android.content.Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        final CameraRepository repository = new CameraRepository(context);
+        final List<CameraSpec> originalCameras = repository.getCameras();
+        final AppSettings settings = new AppSettings(context);
+        final int originalGroupSize = settings.groupSize();
+        final File videoFile = new File(context.getCacheDir(), "aspect-fit-test-4x3.mp4");
+        copyTestVideo(videoFile);
+        ArrayList<CameraSpec> fixture = new ArrayList<>();
+        fixture.add(new CameraSpec("Aspect fit test", Uri.fromFile(videoFile).toString(), "", ""));
+        assertTrue("synthetic camera fixture should be saved", repository.replaceAll(fixture));
+        settings.saveGroupSize(4);
+
+        final Activity activity = launch(MainActivity.class);
+        try {
+            SurfaceView surface = findSurfaceView(activity.getWindow().getDecorView());
+            assertNotNull("camera video surface not found", surface);
+            long deadline = System.currentTimeMillis() + 10000;
+            while (System.currentTimeMillis() < deadline
+                && (findTextContaining(activity.getWindow().getDecorView(), "Bağlanıyor")
+                    || findTextContaining(activity.getWindow().getDecorView(), "Bağlantı yok"))) {
+                Thread.sleep(200);
+                InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+            }
+            assertTrue("synthetic video did not start", findTextContaining(activity.getWindow().getDecorView(), "Aspect fit test"));
+            Thread.sleep(300);
+            int[] location = new int[2];
+            surface.getLocationOnScreen(location);
+            assertTrue("video surface is too small for fit test", surface.getWidth() > 100 && surface.getHeight() > 100);
+
+            Bitmap screenshot = InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();
+            assertNotNull("video screenshot capture failed", screenshot);
+            try {
+                int centerX = location[0] + surface.getWidth() / 2;
+                int centerY = location[1] + surface.getHeight() / 2;
+                int center = screenshot.getPixel(centerX, centerY);
+                int edge;
+                if ((float) surface.getWidth() / surface.getHeight() > 4f / 3f) {
+                    edge = screenshot.getPixel(location[0] + 4, centerY);
+                } else {
+                    edge = screenshot.getPixel(centerX, location[1] + 4);
+                }
+                assertTrue("center should show the synthetic green video", isGreen(center));
+                assertTrue("whole source frame should fit, leaving a dark aspect-ratio bar", isDark(edge));
+            } finally {
+                screenshot.recycle();
+            }
+        } finally {
+            repository.replaceAll(originalCameras);
+            settings.saveGroupSize(originalGroupSize);
+            if (videoFile.exists()) videoFile.delete();
+            InstrumentationRegistry.getInstrumentation().runOnMainSync(new Runnable() {
+                @Override public void run() { if (!activity.isFinishing()) activity.finish(); }
+            });
+            InstrumentationRegistry.getInstrumentation().waitForIdleSync();
         }
     }
 
@@ -223,6 +285,42 @@ public final class TabletUiSmokeTest {
             }
         }
         return null;
+    }
+
+    private SurfaceView findSurfaceView(View root) {
+        if (root instanceof SurfaceView) return (SurfaceView) root;
+        if (root instanceof ViewGroup) {
+            ViewGroup group = (ViewGroup) root;
+            for (int index = 0; index < group.getChildCount(); index++) {
+                SurfaceView result = findSurfaceView(group.getChildAt(index));
+                if (result != null) return result;
+            }
+        }
+        return null;
+    }
+
+    private boolean isGreen(int color) {
+        int red = (color >> 16) & 0xff;
+        int green = (color >> 8) & 0xff;
+        int blue = color & 0xff;
+        return green > 150 && green > red * 2 && green > blue * 2;
+    }
+
+    private boolean isDark(int color) {
+        return ((color >> 16) & 0xff) < 80 && ((color >> 8) & 0xff) < 80 && (color & 0xff) < 80;
+    }
+
+    private void copyTestVideo(File destination) throws Exception {
+        InputStream input = InstrumentationRegistry.getInstrumentation().getContext().getAssets().open("aspect-fit-test-4x3.mp4");
+        FileOutputStream output = new FileOutputStream(destination);
+        try {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+        } finally {
+            output.close();
+            input.close();
+        }
     }
 
     private void clickDescription(final Activity activity, String description) {

@@ -107,11 +107,13 @@ screenshots or UI dumps to GitHub.
 - Provisioned a local-only Android 15 / API 35 x86_64 AVD under the ignored
   `.toolchain` directory. Emulator Vulkan crashed on this host; it runs with
   SwiftShader ANGLE and Vulkan disabled.
-- `connectedDebugAndroidTest`: 3/3 tests passed in portrait, then 3/3 passed in
+- `connectedDebugAndroidTest`: 4/4 tests passed in portrait, then 4/4 passed in
   a landscape logical-display configuration. Tests cover settings/camera-list
   layout and selectors, search and reorder persistence using non-routable
   `.invalid` fixtures, and Home → Cameras → Settings navigation with an empty
-  public camera list. No camera streams or real credentials were used.
+  public camera list. A generated 4:3 green test clip also verifies that the
+  video surface displays the image at its center and leaves a dark aspect-ratio
+  bar at the frame edge. No real camera streams or credentials were used.
 - Landscape was induced with the emulator's logical display size override
   (`1920x1080`); this verifies responsive layout but does not verify physical
   accelerometer rotation. The ASUS K012's orientation behavior remains a
@@ -128,17 +130,18 @@ screenshots or UI dumps to GitHub.
 - `clean assembleDebug assembleDebugAndroidTest testDebugUnitTest lintDebug`:
   `BUILD SUCCESSFUL`; unit tests 8/8 passed; Android test APK built; lint has
   0 errors and 38 warnings.
-- `connectedDebugAndroidTest` on the Android 15 AVD: 3/3 passed in portrait
-  and 3/3 passed with a 1920x1080 landscape logical display. Coverage includes
+- `connectedDebugAndroidTest` on the Android 15 AVD: 4/4 passed in portrait
+  and 4/4 passed with a 1920x1080 landscape logical display. Coverage includes
   Home/Cameras/Settings navigation, empty public-build behavior, camera search,
-  fixture-only reorder persistence, and settings/camera-list layout.
+  fixture-only reorder persistence, settings/camera-list layout, and a
+  synthetic video-frame fit check.
 - Saved the rebuilt public-configuration Android 5+ debug APK at the local,
   gitignored path noted above. `BuildConfig.CAMERAS_JSON` is `[]`; no local
   camera values are included.
 - Video scaling is explicit in `CameraPlayerView`: at 1×, LibVLC uses automatic
   output-window scaling with the stream's original aspect ratio; user zoom may
-  crop by design. No live or synthetic decoded video was used in this run, so
-  visual stream fit still needs a safe stream/device acceptance check.
+  crop by design. A generated 4:3 test clip passed on the emulator. Live
+  camera-stream fit still needs safe physical-device acceptance.
 
 ### Lint fix-up and re-verification — 2026-09-16 13:41:27–13:41:37 +03:00
 
