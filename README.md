@@ -43,7 +43,10 @@ The current published version is **v0.3.0-alpha.2**. It is an alpha release.
   passwords are stored in the app's private local preferences. A discovered
   candidate can be saved with both fields blank; enter credentials later by
   editing that camera if the stream requires them.
-- Import configured stream names from a go2rtc server.
+- Synchronize the saved list with go2rtc after confirmation. The sync replaces
+  local-only entries and keeps one camera when multiple stream names point to
+  the same configured producer source. An empty or failed server response
+  leaves the current list unchanged.
 - Discover ONVIF device endpoint candidates on the local network. Discovery
   lets you select candidates to save; it does not automatically add cameras.
   ONVIF device endpoints are not RTSP video paths, so review or edit the saved

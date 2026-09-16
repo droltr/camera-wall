@@ -7,6 +7,8 @@ Notable changes are documented here. This project follows
 
 ### Changed
 
+- Synchronize the camera list with go2rtc and collapse stream aliases that use
+  the same producer source.
 - Make section navigation clearer with larger labeled tabs and custom icons.
 - Support portrait and landscape rotation, swiping between camera pages, and zoom controls in single-camera view.
 - Use labeled compact selectors for wall size, automatic paging, and page duration; explain network buffer in milliseconds and seconds.

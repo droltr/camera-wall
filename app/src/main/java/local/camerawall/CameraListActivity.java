@@ -59,7 +59,7 @@ public final class CameraListActivity extends BaseSectionActivity {
 
         Button add = actionButton("+ Kamera ekle", true);
         add.setOnClickListener(view -> showAddDialog());
-        Button importButton = actionButton("go2rtc'den al", false);
+        Button importButton = actionButton("go2rtc ile eşitle", false);
         importButton.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { importGo2rtcStreams(); }});
         content.addView(actionRow(add, importButton), rowLayoutParams());
         Button discover = actionButton("ONVIF ile bul", false);
@@ -233,21 +233,63 @@ public final class CameraListActivity extends BaseSectionActivity {
         final AppSettings settings = new AppSettings(this);
         final String base = settings.go2rtcUrl().replaceAll("/$", "");
         if (base.length() == 0) { Toast.makeText(this, "Önce Ayarlar'dan go2rtc adresini girin", Toast.LENGTH_SHORT).show(); return; }
+        new AlertDialog.Builder(this)
+            .setTitle("Kamera listesini eşitle")
+            .setMessage("Liste go2rtc yayınlarıyla değiştirilir. Eşleşmeyen yerel kayıtlar kaldırılır; aynı kaynağa giden yayınlar tek kamera olarak tutulur.")
+            .setNegativeButton("İptal", null)
+            .setPositiveButton("Eşitle", (dialog, which) -> syncGo2rtcStreams(settings, base))
+            .show();
+    }
+
+    void syncGo2rtcStreams(final AppSettings settings, final String base) {
         new Thread(new Runnable() { @Override public void run() {
-            final ArrayList<CameraSpec> found = new ArrayList<>();
+            final ArrayList<CameraSpec> synced = new ArrayList<>();
+            boolean saved = false;
+            HttpURLConnection connection = null;
             try {
-                HttpURLConnection connection = (HttpURLConnection) new URL(base + "/api/streams").openConnection();
+                connection = (HttpURLConnection) new URL(base + "/api/streams").openConnection();
                 connection.setConnectTimeout(4000); connection.setReadTimeout(4000);
                 String auth = settings.go2rtcUser();
                 if (auth.length() > 0) { String token = android.util.Base64.encodeToString((auth + ":" + settings.go2rtcPassword()).getBytes("UTF-8"), android.util.Base64.NO_WRAP); connection.setRequestProperty("Authorization", "Basic " + token); }
-                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream())); StringBuilder body = new StringBuilder(); String line; while ((line = reader.readLine()) != null) body.append(line); reader.close(); connection.disconnect();
-                JSONObject streams = new JSONObject(body.toString()); java.util.Iterator<String> keys = streams.keys();
-                CameraRepository repository = new CameraRepository(CameraListActivity.this); List<CameraSpec> existing = repository.getCameras();
+                int responseCode = connection.getResponseCode();
+                if (responseCode < 200 || responseCode >= 300) throw new java.io.IOException("go2rtc request failed");
+                StringBuilder body = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"))) {
+                    String line; while ((line = reader.readLine()) != null) body.append(line);
+                }
+                JSONObject streams = new JSONObject(body.toString());
+                if (streams.length() == 0) throw new java.io.IOException("go2rtc returned no streams");
+                java.util.LinkedHashMap<String, List<String>> sourcesByName = new java.util.LinkedHashMap<>();
+                java.util.Iterator<String> keys = streams.keys();
+                while (keys.hasNext()) {
+                    String name = keys.next();
+                    JSONObject stream = streams.optJSONObject(name);
+                    ArrayList<String> sources = new ArrayList<>();
+                    org.json.JSONArray producers = stream == null ? null : stream.optJSONArray("producers");
+                    if (producers != null) for (int index = 0; index < producers.length(); index++) {
+                        JSONObject producer = producers.optJSONObject(index);
+                        String source = producer == null ? "" : producer.optString("url", "").trim();
+                        if (source.length() > 0) sources.add(source);
+                    }
+                    sourcesByName.put(name, sources);
+                }
                 java.net.URI serverUri = new java.net.URI(base); String host = serverUri.getHost();
-                while (keys.hasNext()) { String name = keys.next(); String rtsp = "rtsp://" + host + ":8554/" + Uri.encode(name); boolean duplicate = false; for (CameraSpec camera : existing) if (camera.url.equals(rtsp)) duplicate = true; if (!duplicate) found.add(new CameraSpec(name, rtsp, "", "")); }
-                existing.addAll(found); repository.replaceAll(existing);
+                if (host == null) throw new java.io.IOException("Invalid go2rtc address");
+                if (host.indexOf(':') >= 0) host = "[" + host + "]";
+                for (String name : Go2rtcCameraSync.canonicalNames(sourcesByName)) {
+                    String rtsp = "rtsp://" + host + ":8554/" + Uri.encode(name);
+                    synced.add(new CameraSpec(name, rtsp, "", ""));
+                }
+                saved = new CameraRepository(CameraListActivity.this).replaceAll(synced);
             } catch (Exception ignored) { }
-            runOnUiThread(new Runnable() { @Override public void run() { Toast.makeText(CameraListActivity.this, found.size() + " yayın içe aktarıldı", Toast.LENGTH_SHORT).show(); recreate(); }});
+            finally { if (connection != null) connection.disconnect(); }
+            final boolean success = saved;
+            runOnUiThread(new Runnable() { @Override public void run() {
+                Toast.makeText(CameraListActivity.this, success
+                    ? synced.size() + " kamera go2rtc ile eşitlendi"
+                    : "Eşitleme başarısız; mevcut kamera listesi korundu", Toast.LENGTH_LONG).show();
+                if (success) recreate();
+            }});
         }}).start();
     }
 
