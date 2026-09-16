@@ -38,30 +38,35 @@ public final class CameraListActivity extends BaseSectionActivity {
         List<CameraSpec> cameras = new CameraRepository(this).getCameras();
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
-        content.setPadding(dp(24), dp(16), dp(24), dp(16));
+        content.setPadding(dp(22), dp(16), dp(22), dp(18));
 
-        TextView heading = text("Kameralar", 24, Color.WHITE);
-        heading.setPadding(0, 0, 0, dp(12));
+        TextView heading = text("Kameralar", 26, Ui.PRIMARY);
+        heading.setTypeface(null, android.graphics.Typeface.BOLD);
+        heading.setPadding(0, 0, 0, dp(2));
         content.addView(heading, new LinearLayout.LayoutParams(-1, -2));
+        TextView intro = text("Kameralarınızı ekleyin, düzenleyin ve bağlantıyı kontrol edin.", 14, Ui.SECONDARY);
+        intro.setPadding(0, 0, 0, dp(12));
+        content.addView(intro);
 
         Button add = new Button(this);
         add.setText("+ Kamera ekle");
+        Ui.button(add, true);
         add.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showAddDialog(); }
         });
         content.addView(add, rowLayoutParams());
-        Button importButton = new Button(this); importButton.setText("go2rtc yayınlarını içe aktar");
+        Button importButton = new Button(this); importButton.setText("go2rtc yayınlarını içe aktar"); Ui.button(importButton, false);
         importButton.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { importGo2rtcStreams(); }});
         content.addView(importButton, rowLayoutParams());
-        Button discover = new Button(this); discover.setText("ONVIF cihazlarını ara");
+        Button discover = new Button(this); discover.setText("Ağda ONVIF kamerası bul"); Ui.button(discover, false);
         discover.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { discoverOnvif(); }});
         content.addView(discover, rowLayoutParams());
-        Button scan = new Button(this); scan.setText("Yerel RTSP adaylarını tara");
+        Button scan = new Button(this); scan.setText("Yerel RTSP adreslerini tara"); Ui.button(scan, false);
         scan.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { scanRtsp(); }});
         content.addView(scan, rowLayoutParams());
 
         if (cameras.isEmpty()) {
-            TextView empty = text("Henüz kamera eklenmedi.", 18, Color.LTGRAY);
+            TextView empty = text("Henüz kamera eklenmedi.\nBaşlamak için “Kamera ekle” seçeneğine dokunun.", 16, Ui.SECONDARY);
             empty.setGravity(Gravity.CENTER);
             content.addView(empty, new LinearLayout.LayoutParams(-1, 0, 1f));
         } else {
@@ -177,38 +182,38 @@ public final class CameraListActivity extends BaseSectionActivity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.VERTICAL);
         row.setPadding(dp(16), dp(10), dp(16), dp(10));
-        row.setBackgroundColor(Color.rgb(30, 30, 30));
+        Ui.panel(row);
 
-        row.addView(text(position + ".  " + camera.name, 19, Color.WHITE));
-        TextView endpoint = text(sanitizedEndpoint(camera.url), 14, Color.rgb(185, 185, 185));
+        row.addView(text(camera.name, 18, Ui.PRIMARY));
+        TextView endpoint = text(sanitizedEndpoint(camera.url), 13, Ui.SECONDARY);
         endpoint.setPadding(0, dp(4), 0, 0);
         row.addView(endpoint);
-        TextView state = text("Kayıtlı", 13, Color.rgb(105, 205, 135));
+        TextView state = text("●  KAYITLI", 11, Ui.ACCENT);
         state.setPadding(0, dp(4), 0, 0);
         row.addView(state);
         LinearLayout actions = new LinearLayout(this);
         actions.setOrientation(LinearLayout.HORIZONTAL);
-        Button up = new Button(this); up.setText("Yukarı");
+        Button up = new Button(this); up.setText("Yukarı"); Ui.button(up, false);
         up.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 if (new CameraRepository(CameraListActivity.this).move(position, -1)) recreate();
             }
         });
-        Button down = new Button(this); down.setText("Aşağı");
+        Button down = new Button(this); down.setText("Aşağı"); Ui.button(down, false);
         down.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) {
                 if (new CameraRepository(CameraListActivity.this).move(position, 1)) recreate();
             }
         });
-        Button test = new Button(this); test.setText("Test");
+        Button test = new Button(this); test.setText("Bağlantı testi"); Ui.button(test, false);
         test.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { testConnection(camera); }
         });
-        Button edit = new Button(this); edit.setText("Düzenle");
+        Button edit = new Button(this); edit.setText("Düzenle"); Ui.button(edit, false);
         edit.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { showCameraDialog(position, camera); }
         });
-        Button remove = new Button(this); remove.setText("Sil");
+        Button remove = new Button(this); remove.setText("Sil"); Ui.button(remove, false); remove.setTextColor(Ui.DANGER);
         remove.setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View view) { confirmDelete(position, camera.name); }
         });
@@ -254,7 +259,7 @@ public final class CameraListActivity extends BaseSectionActivity {
                 }
             }
         });
-        Media media = new Media(testLibVLC, camera.playbackUri());
+        Media media = new Media(testLibVLC, camera.playbackUri(new AppSettings(this).go2rtcUrl()));
         media.addOption(":rtsp-tcp"); media.addOption(":no-audio"); media.addOption(":network-caching=800");
         testPlayer.setMedia(media); media.release(); testPlayer.play();
         testHandler.postDelayed(new Runnable() { @Override public void run() {

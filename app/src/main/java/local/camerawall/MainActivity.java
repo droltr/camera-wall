@@ -2,26 +2,29 @@ package local.camerawall;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import org.videolan.libvlc.LibVLC;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class MainActivity extends Activity {
-    private static final int CAMERAS_PER_PAGE = 4;
+    private static final int MAX_CAMERAS_PER_PAGE = 8;
 
     private final Handler handler = new Handler();
-    private final CameraPlayerView[] tiles = new CameraPlayerView[CAMERAS_PER_PAGE];
+    private final CameraPlayerView[] tiles = new CameraPlayerView[MAX_CAMERAS_PER_PAGE];
     private LibVLC libVLC;
     private CameraRepository cameraRepository;
     private AppSettings appSettings;
+    private TextView cameraCount;
     private List<CameraSpec> cameras = new ArrayList<>();
     private int currentPage;
     private final Runnable nextPage = new Runnable() {
@@ -42,21 +45,63 @@ public final class MainActivity extends Activity {
         ArrayList<String> options = new ArrayList<>();
         options.add("--no-audio"); if (appSettings.rtspTcp()) options.add("--rtsp-tcp");
         options.add("--network-caching=" + appSettings.networkCacheMs());
-        if (appSettings.hardwareAcceleration()) options.add("--avcodec-hw=any");
+        options.add(appSettings.hardwareAcceleration() ? "--avcodec-hw=any" : "--avcodec-hw=none");
         libVLC = new LibVLC(this, options);
         cameraRepository = new CameraRepository(this);
         cameras = cameraRepository.getCameras();
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.BLACK);
+        root.setBackgroundColor(Ui.BACKGROUND);
+
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(18), dp(8), dp(18), dp(4));
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(R.drawable.ic_camera_wall);
+        header.addView(logo, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        LinearLayout brand = new LinearLayout(this);
+        brand.setOrientation(LinearLayout.VERTICAL);
+        brand.setPadding(dp(10), 0, 0, 0);
+        TextView title = new TextView(this);
+        title.setText("Camera Wall");
+        title.setTextColor(Ui.PRIMARY);
+        title.setTextSize(19);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        TextView subtitle = new TextView(this);
+        subtitle.setText("Güvenlik kamera paneli");
+        subtitle.setTextColor(Ui.SECONDARY);
+        subtitle.setTextSize(12);
+        brand.addView(title);
+        brand.addView(subtitle);
+        header.addView(brand, new LinearLayout.LayoutParams(0, -2, 1f));
+        cameraCount = new TextView(this);
+        cameraCount.setText(cameras.size() + " kamera");
+        cameraCount.setTextColor(Ui.ACCENT);
+        cameraCount.setTextSize(13);
+        header.addView(cameraCount);
+        root.addView(header, new LinearLayout.LayoutParams(-1, dp(58)));
+
+        LinearLayout layoutPicker = new LinearLayout(this);
+        layoutPicker.setPadding(dp(14), dp(4), dp(14), dp(8));
+        Button fourButton = layoutButton("4'lü görünüm", 4);
+        Button eightButton = layoutButton("8'li görünüm", 8);
+        layoutPicker.addView(fourButton, new LinearLayout.LayoutParams(0, dp(42), 1f));
+        LinearLayout.LayoutParams eightParams = new LinearLayout.LayoutParams(0, dp(42), 1f);
+        eightParams.leftMargin = dp(8);
+        layoutPicker.addView(eightButton, eightParams);
+        updateLayoutButtons(fourButton, eightButton);
+        fourButton.setOnClickListener(view -> { appSettings.saveGroupSize(4); updateLayoutButtons(fourButton, eightButton); recreate(); });
+        eightButton.setOnClickListener(view -> { appSettings.saveGroupSize(8); updateLayoutButtons(fourButton, eightButton); recreate(); });
+        root.addView(layoutPicker);
 
         LinearLayout wall = new LinearLayout(this);
-        wall.setOrientation(LinearLayout.VERTICAL); wall.setBackgroundColor(Color.BLACK);
+        wall.setOrientation(LinearLayout.VERTICAL); wall.setBackgroundColor(Ui.BACKGROUND);
         for (int row = 0; row < 2; row++) {
             LinearLayout line = new LinearLayout(this); line.setOrientation(LinearLayout.HORIZONTAL);
-            for (int column = 0; column < 2; column++) {
-                int index = row * 2 + column;
+            int columns = appSettings.groupSize() == 4 ? 2 : 4;
+            for (int column = 0; column < columns; column++) {
+                int index = row * columns + column;
                 tiles[index] = new CameraPlayerView(this, libVLC, handler);
                 final int slot = index;
                 tiles[index].setOnClickListener(new View.OnClickListener() {
@@ -81,12 +126,23 @@ public final class MainActivity extends Activity {
         setContentView(root);
     }
 
-    private int pageCount() { return Math.max(1, (cameras.size() + CAMERAS_PER_PAGE - 1) / CAMERAS_PER_PAGE); }
+    private Button layoutButton(String label, int size) {
+        Button button = new Button(this);
+        button.setText(label);
+        Ui.button(button, appSettings.groupSize() == size);
+        return button;
+    }
+    private void updateLayoutButtons(Button four, Button eight) {
+        Ui.button(four, appSettings.groupSize() == 4);
+        Ui.button(eight, appSettings.groupSize() == 8);
+    }
+    private int camerasPerPage() { return appSettings.groupSize(); }
+    private int pageCount() { return Math.max(1, (cameras.size() + camerasPerPage() - 1) / camerasPerPage()); }
     private void showPage(int page) {
-        for (int slot = 0; slot < CAMERAS_PER_PAGE; slot++) {
-            int cameraIndex = page * CAMERAS_PER_PAGE + slot;
+        for (int slot = 0; slot < camerasPerPage(); slot++) {
+            int cameraIndex = page * camerasPerPage() + slot;
             CameraSpec camera = cameraIndex < cameras.size() ? cameras.get(cameraIndex) : null;
-            tiles[slot].bind(camera == null ? null : camera.name, camera == null ? null : camera.playbackUri());
+            tiles[slot].bind(camera == null ? null : camera.name, camera == null ? null : camera.playbackUri(appSettings.go2rtcUrl()), appSettings.showLabels());
         }
     }
     private void schedulePageChange() {
@@ -94,7 +150,7 @@ public final class MainActivity extends Activity {
         if (pageCount() > 1 && appSettings.autoPage()) handler.postDelayed(nextPage, appSettings.pageIntervalSeconds() * 1000L);
     }
     private void openCamera(int slot) {
-        int cameraIndex = currentPage * CAMERAS_PER_PAGE + slot;
+        int cameraIndex = currentPage * camerasPerPage() + slot;
         if (cameraIndex >= cameras.size()) return;
         Intent intent = new Intent(this, SingleCameraActivity.class);
         intent.putExtra(SingleCameraActivity.EXTRA_CAMERA_INDEX, cameraIndex);
@@ -108,6 +164,7 @@ public final class MainActivity extends Activity {
     @Override protected void onResume() {
         super.onResume();
         cameras = cameraRepository.getCameras();
+        cameraCount.setText(cameras.size() + " kamera");
         currentPage = Math.min(currentPage, pageCount() - 1);
         showPage(currentPage);
         schedulePageChange();

@@ -58,6 +58,11 @@ logs credentials. Its connectivity check is a read-only request to
 `/api/streams`; it does not alter server configuration. These are preparation
 measures only and do not replace server-side authentication or network ACLs.
 
+The app permits cleartext traffic so it can connect to go2rtc installations that
+serve their API over HTTP. HTTP does not protect API credentials or responses
+from other devices on the network. Use this only on a trusted, isolated LAN and
+keep go2rtc ports off the public internet; use HTTPS when the server supports it.
+
 ### Closure criteria
 
 - Unauthenticated RTSP playback from an ordinary LAN client fails.

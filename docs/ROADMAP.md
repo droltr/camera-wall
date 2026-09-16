@@ -10,6 +10,45 @@ before merge.
 The project remains in alpha. Beta and stable releases are intentionally
 deferred until the interface, persistence, recovery, and device tests mature.
 
+## Alpha checkpoint — 2026-09-14
+
+Completed and merged into `main`:
+
+- Reusable libVLC playback, persistent camera repository, migration fallback,
+  2x2 wall, paging, fullscreen view, Back behavior, and bottom navigation.
+- Camera list with add/edit/delete/reorder and RTSP connection testing.
+- Persisted application settings and go2rtc address/credential settings with a
+  visible unauthenticated-LAN warning.
+- go2rtc stream import, opt-in ONVIF discovery, bounded local RTSP candidate
+  scanning, launcher icon, and RTSP playback health watchdog.
+- x86, armeabi-v7a, and arm64-v8a packaging; ASUS K012 smoke verification;
+  public GitHub Project/Issue/PR tracking and alpha changelog.
+
+The current tablet is operational and displays the configured streams. A
+watchdog retries a tile when `Playing` does not become healthy. The tablet
+screen currently presents the camera images rotated relative to the physical
+mount; this is recorded as a follow-up rather than changing the known-good
+playback path during this pause.
+
+## Remaining backlog
+
+1. **Server-side network hardening (#28, deferred):** authenticate/restrict
+   Frigate and go2rtc APIs and RTSP, rotate credentials, and verify firewall
+   boundaries. This must be coordinated with the deployment and is not an app-
+   only change.
+2. **Extended pre-beta test:** run the documented 30-minute+ playback,
+   reconnect, paging, fullscreen, reboot, and memory/CPU checks on the K012.
+3. **Orientation polish:** determine whether rotation belongs to camera source,
+   device mounting, or an explicit per-camera transform setting.
+4. **ARM physical-device validation:** install the universal APK on an ARM
+   device; x86 APK contents are already verified on the K012.
+5. **Release preparation:** configure signing secrets, create a signed
+   `0.3.0-alpha.1` GitHub pre-release, and attach checksums.
+6. **Optional polish:** apply all settings to every player option, improve
+   discovery-result import UX, and add automated UI/regression tests.
+
+No beta or stable work is scheduled until the first two items are complete.
+
 ## Target navigation
 
 ```text
