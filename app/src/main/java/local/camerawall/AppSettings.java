@@ -10,6 +10,7 @@ final class AppSettings {
     private static final String PREFS = "app_settings";
     private static final String PAGE_INTERVAL = "page_interval_seconds";
     private static final String AUTO_PAGE = "auto_page";
+    private static final String GROUP_SIZE = "group_size";
     private static final String NETWORK_CACHE = "network_cache_ms";
     private static final String RTSP_TCP = "rtsp_tcp";
     private static final String HW_ACCEL = "hardware_acceleration";
@@ -23,9 +24,13 @@ final class AppSettings {
     AppSettings(Context context) { prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE); }
     int pageIntervalSeconds() { return clamp(prefs.getInt(PAGE_INTERVAL, DEFAULT_PAGE_INTERVAL_SECONDS), 1, 3600); }
     boolean autoPage() { return prefs.getBoolean(AUTO_PAGE, true); }
+    int groupSize() { return prefs.getInt(GROUP_SIZE, 4) == 8 ? 8 : 4; }
+    void saveGroupSize(int size) { prefs.edit().putInt(GROUP_SIZE, size == 8 ? 8 : 4).apply(); }
     int networkCacheMs() { return clamp(prefs.getInt(NETWORK_CACHE, DEFAULT_NETWORK_CACHE_MS), 100, 10000); }
     boolean rtspTcp() { return prefs.getBoolean(RTSP_TCP, true); }
-    boolean hardwareAcceleration() { return prefs.getBoolean(HW_ACCEL, true); }
+    // ASUS K012's Intel OMX AVC decoder loses reference frames on the NVR
+    // streams and produces grey/corrupted frames. Prefer VLC software decode.
+    boolean hardwareAcceleration() { return false; }
     boolean showLabels() { return prefs.getBoolean(SHOW_LABELS, true); }
     boolean keepScreenOn() { return prefs.getBoolean(KEEP_SCREEN, true); }
     String go2rtcUrl() { return prefs.getString(GO2RTC_URL, ""); }

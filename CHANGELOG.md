@@ -5,6 +5,23 @@ Notable changes are documented here. This project follows
 
 ## [Unreleased]
 
+## [0.3.0-alpha.2] - 2026-09-16
+
+### Added
+
+- Switchable 4-camera and 8-camera wall layouts with saved preference
+- Hikvision channel restream routing through the locally configured go2rtc host
+- New Camera Wall logo and refreshed camera, navigation, and settings screens
+
+### Changed
+
+- Use Hikvision low-bandwidth substreams and software decoding for older tablets
+- Keep local camera configuration and device session notes out of GitHub releases
+- Target Android 16 (API 36) while retaining Android 5.0 (API 21) support
+- Upgrade LibVLC to 3.7.0 for current native playback support
+
+## [0.3.0-alpha.1] - 2026-09-14
+
 ### Added
 
 - Persisted application and go2rtc server settings with masked credentials
@@ -30,7 +47,7 @@ Notable changes are documented here. This project follows
 
 ### Changed
 
-- Documentation now accurately states the three-second page interval and x86-only ABI
+- Documentation now accurately states the three-second page interval and x86/ARM ABI support
 
 ## [0.1.0-alpha.1] - 2026-09-13
 
@@ -38,6 +55,8 @@ Notable changes are documented here. This project follows
 
 - Initial 2x2 RTSP camera wall application
 
-[Unreleased]: https://github.com/droltr/camera-wall/compare/v0.2.0-alpha.1...HEAD
+[Unreleased]: https://github.com/droltr/camera-wall/compare/v0.3.0-alpha.2...HEAD
+[0.3.0-alpha.2]: https://github.com/droltr/camera-wall/compare/v0.3.0-alpha.1...v0.3.0-alpha.2
+[0.3.0-alpha.1]: https://github.com/droltr/camera-wall/compare/v0.2.0-alpha.1...v0.3.0-alpha.1
 [0.2.0-alpha.1]: https://github.com/droltr/camera-wall/compare/v0.1.0-alpha.1...v0.2.0-alpha.1
 [0.1.0-alpha.1]: https://github.com/droltr/camera-wall/releases/tag/v0.1.0-alpha.1
